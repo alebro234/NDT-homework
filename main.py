@@ -98,11 +98,11 @@ M = rho_cl(T_cl_avg) * Ha * np.pi*(Rco_hot**2 - Rci_hot**2)
 print(f"Hot cladding mass: {M} kg")
 
 
-n_z = len(z)
-Tfo = T_fuel[int(n_z/2), -1]
-r0, r1, r2, T0 = fn.restructuring(q0, TD, 0.98*TD, 0.96*TD, rho_f, Rfo_hot, x, wt_Pu, BU, Tfo)
-print(f"\n\nRestructuring radii: {r0*1000}, {r1*1000}, {r2*1000}, {Rfo_hot*1000} mm")
-print(f"At temperatures: {T0}, 1800, 1600, {Tfo} °C")
+# n_z = len(z)
+# Tfo = T_fuel[int(n_z/2), -1]
+# r0, r1, r2, T0 = fn.restructuring(q0, TD, 0.98*TD, 0.96*TD, rho_f, Rfo_hot, x, wt_Pu, BU, Tfo)
+# print(f"\n\nRestructuring radii: {r0*1000}, {r1*1000}, {r2*1000}, {Rfo_hot*1000} mm")
+# print(f"At temperatures: {T0}, 1800, 1600, {Tfo} °C")
 
 
 
