@@ -85,17 +85,6 @@ plt.plot(z_cool, h_Na)
 plt.xlabel('z-axis of fuel column height $[m]$')
 plt.ylabel('Heat transfer coefficint along z-axis $[W/m^{2}*K]$')
 
-plt.figure(4)
-plt.plot(R_tot, T_map[4, :], label = '$T(r) COLD GEOMETRY$', color = 'blue')
-plt.xlabel('r-axis of the fuel column $[m]$')
-plt.ylabel('Tempertaure profile [°C]')
-plt.axvline(x = R_co_vec[4], color = 'blue')
-plt.axvline(x = R_ci_vec[4], color = 'blue')
-plt.axvline(x = R_fo_vec[4], color = 'blue')
-plt.axvline(x = R_fi_vec[4], color = 'blue')
-
-plt.show()
-
 # Now we procede to accounto for the thermal expansion effect by finding the HOT GEOMETRY
 alpha_l = 1.2 * 1e-5 #[1/°C]
 T_ref = 25 #[°C] reference ambient temperature
@@ -111,15 +100,26 @@ T_fo_old = T_map[:, 2*n - 1]
 toll = 100
 while toll >= 1e-5:
     [R_fo_new, R_ci_new, R_co_new] = fun.Th_Expansion(R_fo_old, T_fo_old, R_ci_old, T_ci_old, R_co_old, T_co_old, alpha_l, T_ref)
-    [T_z_cool_new, T_map_new, T_vec_new, R_tot_new, u_Na_new, h_Na_new] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_new, R_ci_new, R_fo_new, R_fi_vec, H_node, P, Pu, Bu, f)
+    [T_z_cool_new, T_map_new, T_vec_new, R_tot_new, u_Na_new, h_Na_new] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_new, R_ci_new, R_fo_new, R_fi_vec, H_node, P, Pu, Bu, f, n)
     T_co_new = T_map_new[:, 0]
     T_ci_new = T_map_new[:, n - 1]
     T_fo_new = T_map_new[:, 2*n - 1]
 
-    toll = np.sum(np.sqrt((R_fo_new - R_fo_old)**2 + (R_ci_new - R_ci_old)**2 + (R_co_new - R_co_old)**2))
+    toll = np.sum(np.sqrt((T_co_new - T_co_old)**2 + (T_ci_new - T_co_old)**2 + (T_fo_new - T_fo_old)**2))
 
     T_co_old = T_co_new
     T_ci_old = T_ci_new
     T_fo_old = T_fo_new
 
+
+plt.figure(4)
+plt.plot(R_tot, T_map[4, :], label = '$T(r) COLD GEOMETRY$', color = 'blue')
+plt.xlabel('r-axis of the fuel column $[m]$')
+plt.ylabel('Tempertaure profile [°C]')
+plt.axvline(x = R_co_vec[4], color = 'blue')
+plt.axvline(x = R_ci_vec[4], color = 'blue')
+plt.axvline(x = R_fo_vec[4], color = 'blue')
+plt.axvline(x = R_fi_vec[4], color = 'blue')
+
+plt.show()
 

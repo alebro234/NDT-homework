@@ -75,11 +75,11 @@ def Th_Expansion(R_fo_cold, T_fo, R_ci_cold, T_ci, R_co_cold, T_co, alpha_l, T_r
         
         # Th. expansion of the clading inner radius:
         R_ci_new[i] = R_ci * (1 + co.epsilon_cl(T_ci[i]))
-        
+        R_co_new[i] = R_co * (1 + co.epsilon_cl(T_co[i]))
         # Th. expansion of the cladding outer radius found my impling mass conservation
-        eps_cl_cold = co.epsilon_cl(T_ref)
-        eps_cl_hot = co.epsilon_cl(np.mean((T_ci[i], T_co[i])))
-        R_co_new[i] = np.sqrt((R_ci_new[i]**2) + (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co**2) - (R_ci**2)))
+        #eps_cl_cold = co.epsilon_cl(T_ref)
+        #eps_cl_hot = co.epsilon_cl(np.mean((T_ci[i], T_co[i])))
+        #R_co_new[i] = np.sqrt((R_ci_new[i]**2) + (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co**2) - (R_ci**2)))
         
     return [R_fo_new, R_ci_new, R_co_new]
            
