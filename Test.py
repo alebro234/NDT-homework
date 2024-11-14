@@ -61,6 +61,34 @@ R_fi_vec = np.zeros(np.size(node_coef)) # The vecotr of the fuel inner radius al
 
 [T_z_cool, T_map, T_ax_vec, R_tot, u_Na, h_Na] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_vec, R_ci_vec, R_fo_vec, R_fi_vec, H_node, P, Pu, Bu, f, n)
 
+# Now we procede to accounto for the thermal expansion effect by finding the HOT GEOMETRY
+alpha_l = 1.2 * 1e-5 #[1/°C]
+T_ref = 25 #[°C] reference ambient temperature
+# Here we must iterate the calculations for the radii and temperatures so we define the starting values as '_old'
+R_co_cold = R_co_vec
+R_ci_cold = R_ci_vec
+R_fo_cold = R_fo_vec
+R_fi_cold = R_fi_vec
+
+[T_z_cold, T_cold_m, T_cold_v, R_cold, u_cold, h_cold] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_cold, R_ci_cold, R_fo_cold, R_fi_cold, H_node, P, Pu, Bu, f, n)
+[R_co_hot, R_ci_hot, R_fo_hot, R_fi_hot] = fun.Th_Expansion(R_co_cold, T_cold_v[3], R_ci_cold, T_cold_v[2], R_fo_cold, T_cold_v[1], R_fi_cold, T_cold_v[0], alpha_l, T_ref)
+[T_z_hot, T_hot_m, T_hot_v, R_hot, u_hot, h_hot] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_hot, R_ci_hot, R_fo_hot, R_fi_hot, H_node, P, Pu, Bu, f, n)
+
+# # And here we create the while cycle to interate untill convergence
+# err = 100
+# while err >= 1e-5:
+#     [T_z_cold, T_cold_m, T_cold_v, R_cold, u_cold, h_cold] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_cold, R_ci_cold, R_fo_cold, R_fi_cold, H_node, P, Pu, Bu, f, n)
+#     [R_co_hot, R_ci_hot, R_fo_hot, R_fi_hot] = fun.Th_Expansion(R_co_cold, T_cold_v[3], R_ci_cold, T_cold_v[2], R_fo_cold, T_cold_v[1], R_fi_cold, T_cold_v[0], alpha_l, T_ref)
+#     [T_z_hot, T_hot_m, T_hot_v, R_hot, u_hot, h_hot] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_hot, R_ci_hot, R_fo_hot, R_fi_hot, H_node, P, Pu, Bu, f, n)
+#     # We define the error as:
+#     err = np.sum(np.abs((T_cold_v[3] - T_hot_v[3])) + np.abs((T_cold_v[2] - T_hot_v[2])) + np.abs((T_cold_v[1] - T_hot_v[1])) + np.abs((T_cold_v[0] - T_hot_v[0])))
+#     # And we change the values for the cold case to reiterate the loop till convergence:
+#     R_co_cold = R_co_hot
+#     R_ci_cold = R_ci_hot
+#     R_fo_cold = R_fo_hot
+#     R_fi_cold = R_fi_hot
+
+# Let's  finally plot our so bastard to get results! 
 z_cool = np.arange(0, H_node * np.size(node_coef), H_node)
 
 plt.figure(1)
@@ -76,50 +104,37 @@ plt.ylabel('z-axis of fuel column height $[m]$')
 plt.legend()
 
 plt.figure(2)
-plt.plot(z_cool, u_Na)
+plt.plot(z_cool, u_Na, label = 'COLD', color = 'blue')
+plt.plot(z_cool, u_hot, label = 'HOT', color = 'red')
 plt.xlabel('z-axis of fuel column height $[m]$')
 plt.ylabel('Sodium velocity along z-axis $[m/s]$')
+plt.legend()
 
 plt.figure(3)
-plt.plot(z_cool, h_Na)
+plt.plot(z_cool, h_Na, label = 'COLD')
+plt.plot(z_cool, h_hot, label = 'HOT')
 plt.xlabel('z-axis of fuel column height $[m]$')
 plt.ylabel('Heat transfer coefficint along z-axis $[W/m^{2}*K]$')
-
-# Now we procede to accounto for the thermal expansion effect by finding the HOT GEOMETRY
-alpha_l = 1.2 * 1e-5 #[1/°C]
-T_ref = 25 #[°C] reference ambient temperature
-# Here we must iterate the calculations for the radii and temperatures so we define the starting values as '_old'
-R_co_old = R_co_vec
-R_ci_old = R_ci_vec
-R_fo_old = R_fo_vec
-
-T_co_old = T_map[:, 0]
-T_ci_old = T_map[:, n - 1]
-T_fo_old = T_map[:, 2*n - 1]
-# And here we create the while cycle to interate untill convergence
-toll = 100
-while toll >= 1e-5:
-    [R_fo_new, R_ci_new, R_co_new] = fun.Th_Expansion(R_fo_old, T_fo_old, R_ci_old, T_ci_old, R_co_old, T_co_old, alpha_l, T_ref)
-    [T_z_cool_new, T_map_new, T_vec_new, R_tot_new, u_Na_new, h_Na_new] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_new, R_ci_new, R_fo_new, R_fi_vec, H_node, P, Pu, Bu, f, n)
-    T_co_new = T_map_new[:, 0]
-    T_ci_new = T_map_new[:, n - 1]
-    T_fo_new = T_map_new[:, 2*n - 1]
-
-    toll = np.sum(np.sqrt((T_co_new - T_co_old)**2 + (T_ci_new - T_co_old)**2 + (T_fo_new - T_fo_old)**2))
-
-    T_co_old = T_co_new
-    T_ci_old = T_ci_new
-    T_fo_old = T_fo_new
-
+plt.legend()
 
 plt.figure(4)
-plt.plot(R_tot, T_map[4, :], label = '$T(r) COLD GEOMETRY$', color = 'blue')
+plt.plot(R_tot, T_map[4, :], label = 'T(r, z = 4°nodo) COLD GEOMETRY', color = 'blue')
+plt.plot(R_hot, T_hot_m[4, :], label = 'T(r, z = 4°nodo) HOT GEOMETRY', color = 'red')
 plt.xlabel('r-axis of the fuel column $[m]$')
 plt.ylabel('Tempertaure profile [°C]')
-plt.axvline(x = R_co_vec[4], color = 'blue')
-plt.axvline(x = R_ci_vec[4], color = 'blue')
-plt.axvline(x = R_fo_vec[4], color = 'blue')
+plt.axvline(x = R_co_vec[4], color = 'orange')
+plt.axvline(x = R_co_hot[4], color = 'orange')
+plt.axvline(x = R_ci_vec[4], color = 'yellow')
+plt.axvline(x = R_ci_hot[4], color = 'yellow')
+plt.axvline(x = R_fo_vec[4], color = 'green')
+plt.axvline(x = R_fo_hot[4], color = 'green')
 plt.axvline(x = R_fi_vec[4], color = 'blue')
+plt.axvline(x = R_fi_hot[4], color = 'blue')
+plt.legend()
 
 plt.show()
 
+# print(f'The cold temperature profiles at the interfaces are ', T_cold_v)
+# print(f'The hot temperature profiles at the interfaces are', T_hot_v)
+# print(R_hot)
+print(Bu)

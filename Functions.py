@@ -64,24 +64,21 @@ def Th_Analysis(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, H_node, Por, Pu, 
 
     return [T_node_avg, T_map, T_ax_vec, R, u_cool, h_cool]
 
-def Th_Expansion(R_fo_cold, T_fo, R_ci_cold, T_ci, R_co_cold, T_co, alpha_l, T_ref):
-    # We must keep the axial subdivision into nodes, again [i] is the i-th node index
-    empty_vec = [np.zeros(np.size(R_fo_cold)) for _ in range(3)]
-    R_fo_new, R_co_new, R_ci_new = empty_vec
+def Th_Expansion(R_co_cold, T_co, R_ci_cold, T_ci, R_fo_cold, T_fo, R_fi_cold, T_fi, alpha_l, T_ref):
     
-    for i, (R_fo, R_ci, R_co) in enumerate(zip(R_fo_cold, R_ci_cold, R_co_cold)):
-        # Th. expansion of the fuel external radius: 
-        R_fo_new[i] = R_fo * (1 + alpha_l * (T_fo[i] - T_ref))
-        
         # Th. expansion of the clading inner radius:
-        R_ci_new[i] = R_ci * (1 + co.epsilon_cl(T_ci[i]))
-        R_co_new[i] = R_co * (1 + co.epsilon_cl(T_co[i]))
-        # Th. expansion of the cladding outer radius found my impling mass conservation
-        #eps_cl_cold = co.epsilon_cl(T_ref)
-        #eps_cl_hot = co.epsilon_cl(np.mean((T_ci[i], T_co[i])))
-        #R_co_new[i] = np.sqrt((R_ci_new[i]**2) + (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co**2) - (R_ci**2)))
+        R_ci_hot = R_ci_cold * (1 + co.epsilon_cl(T_ci))
         
-    return [R_fo_new, R_ci_new, R_co_new]
+        # Th. expansion of the cladding outer radius found my impling mass conservation
+        eps_cl_cold = co.epsilon_cl(T_ref)
+        eps_cl_hot = co.epsilon_cl(np.mean(np.array([T_co, T_ci]), axis = 0))
+        R_co_hot = np.sqrt((R_ci_hot**2) + (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co_cold**2) - (R_ci_cold**2)))
+        
+        # Th. expansion of the fuel external radius: 
+        R_fo_hot = R_fo_cold * (1 + alpha_l * (T_fo - T_ref))
+        R_fi_hot = R_fi_cold * (1 + alpha_l * (T_fi - T_ref))
+
+        return [R_co_hot, R_ci_hot, R_fo_hot, R_fi_hot]
            
         
         
