@@ -62,7 +62,7 @@ R_fi_vec = np.zeros(np.size(node_coef)) # The vecotr of the fuel inner radius al
 [T_z_cool, T_map, T_ax_vec, R_tot, u_Na, h_Na] = fun.Th_Analysis(q1_vec, mdot, Tc_in, pin_p, R_co_vec, R_ci_vec, R_fo_vec, R_fi_vec, H_node, P, Pu, Bu, f, n)
 
 # Now we procede to accounto for the thermal expansion effect by finding the HOT GEOMETRY
-alpha_l = 1.2 * 1e-5 #[1/°C]
+alpha_l = 1.2 * 1e-5 #[°C^-1]
 T_ref = 25 #[°C] reference ambient temperature
 # Here we must iterate the calculations for the radii and temperatures so we define the starting values as '_old'
 R_co_cold = R_co_vec
@@ -118,18 +118,18 @@ plt.ylabel('Heat transfer coefficint along z-axis $[W/m^{2}*K]$')
 plt.legend()
 
 plt.figure(4)
-plt.plot(R_tot, T_map[4, :], label = 'T(r, z = 4°nodo) COLD GEOMETRY', color = 'blue')
-plt.plot(R_hot, T_hot_m[4, :], label = 'T(r, z = 4°nodo) HOT GEOMETRY', color = 'red')
+plt.plot(R_tot, T_map[9, :], label = 'T(r, z = 9°nodo) COLD GEOMETRY', color = 'blue')
+plt.plot(R_hot, T_hot_m[9, :], label = 'T(r, z = 9°nodo) HOT GEOMETRY', color = 'red')
 plt.xlabel('r-axis of the fuel column $[m]$')
 plt.ylabel('Tempertaure profile [°C]')
-plt.axvline(x = R_co_vec[4], color = 'orange')
-plt.axvline(x = R_co_hot[4], color = 'orange')
-plt.axvline(x = R_ci_vec[4], color = 'yellow')
-plt.axvline(x = R_ci_hot[4], color = 'yellow')
-plt.axvline(x = R_fo_vec[4], color = 'green')
-plt.axvline(x = R_fo_hot[4], color = 'green')
-plt.axvline(x = R_fi_vec[4], color = 'blue')
-plt.axvline(x = R_fi_hot[4], color = 'blue')
+plt.axvline(x = R_co_vec[9], color = 'blue')
+plt.axvline(x = R_co_hot[9], color = 'red')
+plt.axvline(x = R_ci_vec[9], color = 'blue')
+plt.axvline(x = R_ci_hot[9], color = 'red')
+plt.axvline(x = R_fo_vec[9], color = 'blue')
+plt.axvline(x = R_fo_hot[9], color = 'red')
+plt.axvline(x = R_fi_vec[9], color = 'blue')
+plt.axvline(x = R_fi_hot[9], color = 'red')
 plt.legend()
 
 plt.show()
@@ -137,4 +137,9 @@ plt.show()
 # print(f'The cold temperature profiles at the interfaces are ', T_cold_v)
 # print(f'The hot temperature profiles at the interfaces are', T_hot_v)
 # print(R_hot)
-print(Bu)
+# print(R_co_cold - R_co_hot)
+# T_cl_avg = np.mean(np.array([T_ax_vec[3], T_ax_vec[2]]), axis = 0)
+# T_fu_avg = np.mean(np.array([T_ax_vec[1], T_ax_vec[0]]), axis = 0)
+# R_ci_hot2 = R_ci_vec * (1 + co.epsilon_cl(T_cl_avg))
+# R_fo_hot2 = R_fo_vec * (1 + alpha_l * (T_fu_avg - T_ref))
+# print(t_gap - (R_ci_hot2 - R_fo_hot2))

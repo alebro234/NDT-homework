@@ -24,7 +24,11 @@ def Th_Analysis(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, H_node, Por, Pu, 
     u_cool, h_cool, T_z_co, T_node_avg = empty_vec
     # While here we build the empty matrixes that will be filled at each i-th iteration
     T_map = np.zeros((np.size(q1_vec), 3*n))
-    
+    # for i in range(3*n -1):
+    #     R_cl = np.linspace(R_co[i], R_ci[i], n + 1)
+    #     R_gap = np.linspace(R_ci[i], R_fo[i], n + 1)
+    #     R_fu = np.linspace(R_fo[i], R_fi[i], n)
+
     for i, (q, D, A) in enumerate(zip(q1_vec, D_h, A_ch)): # i is the node index
         # At each iteration we find the upper tempertaure extreme of each node for the one fo the node before,
         # (for the first node we need the lower tempertaure extreme wich is given: T[i = 0] = T_in )
@@ -67,16 +71,19 @@ def Th_Analysis(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, H_node, Por, Pu, 
 def Th_Expansion(R_co_cold, T_co, R_ci_cold, T_ci, R_fo_cold, T_fo, R_fi_cold, T_fi, alpha_l, T_ref):
     
         # Th. expansion of the clading inner radius:
-        R_ci_hot = R_ci_cold * (1 + co.epsilon_cl(T_ci))
+        # T_cl_avg = np.mean(np.array([T_co, T_ci]), axis = 0)
+        R_co_hot = R_co_cold * (1 + co.epsilon_cl(T_co))
         
         # Th. expansion of the cladding outer radius found my impling mass conservation
-        eps_cl_cold = co.epsilon_cl(T_ref)
-        eps_cl_hot = co.epsilon_cl(np.mean(np.array([T_co, T_ci]), axis = 0))
-        R_co_hot = np.sqrt((R_ci_hot**2) + (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co_cold**2) - (R_ci_cold**2)))
+        R_ci_hot = R_ci_cold * (1 + co.epsilon_cl(T_ci))
+        # eps_cl_cold = co.epsilon_cl(T_ref)
+        # eps_cl_hot = co.epsilon_cl(T_cl_avg)
+        # R_ci_hot = np.sqrt((R_co_hot**2) - (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co_cold**2) - (R_ci_cold**2)))
         
         # Th. expansion of the fuel external radius: 
-        R_fo_hot = R_fo_cold * (1 + alpha_l * (T_fo - T_ref))
-        R_fi_hot = R_fi_cold * (1 + alpha_l * (T_fi - T_ref))
+        T_fu_avg = np.mean(np.array([T_fo, T_fi]), axis = 0) + 300
+        R_fo_hot = R_fo_cold * (1 + alpha_l * (T_fu_avg - T_ref))
+        R_fi_hot = R_fi_cold * (1 + alpha_l * (T_fu_avg - T_ref))
 
         return [R_co_hot, R_ci_hot, R_fo_hot, R_fi_hot]
            
