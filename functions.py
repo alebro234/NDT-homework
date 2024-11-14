@@ -2,6 +2,7 @@ import numpy as np
 from scipy.integrate import solve_ivp, quad
 from scipy.optimize import fsolve
 import Correlations as cr
+import matplotlib.pyplot as plt
 
 class Fuel:
     # fuel properties class
@@ -46,6 +47,20 @@ def k_fuel(T, x, p, wt_Pu, BU):
 
     k = 1.755 + (k0 - 1.755) * np.exp(-BU/128.75)
     return k
+
+def tc_integral(Ti, To, x, p, wt_Pu, BU):
+    # fuel thermal conductivity integral [W m^-1]
+    Ti = Ti + 273.15 # K
+    To = To + 273.15 # K
+    A = 0.01926 + 1.06e-6 * x + 2.63e-8 * wt_Pu
+    B = 2.39e-4 + 1.37e-13 * wt_Pu
+    D = 5.27e9
+    E = 17109.5
+
+    ko_int = ( np.log((A + B*Ti)/(A + B*To))/B + D*( np.exp(-1/To) - np.exp(-1/Ti) )/E )*(1-p)**2.5
+
+    k_int = 1.755*(Ti-To) + ( ko_int - 1.755*(Ti-To) )*np.exp(-BU/128.75)
+    return k_int
 
 
 
@@ -148,7 +163,7 @@ def thermal_analysis(q_lin, Rco, Rci, Rfo, fuel, nz = 100, nr = 50):
     for i in range(nz):
         T_clad[i,:] = T_cyl( Tcl_i_z[i], Tcl_o_z[i], Rci, Rco, r_clad )
 
-    # orient from 0 to Rfo 
+    # orient from 0 to Rfo
     r_fuel = np.flip(r_fuel)
     T_fuel = np.fliplr(T_fuel)
 
@@ -181,9 +196,11 @@ def hot_geometry(q_lin, Rco_cold, Rci_cold, Rfo_cold, fuel):
     
     z, rf, Tf, rcl, Tcl, Tgap = thermal_analysis(q_lin, Rco_cold, Rci_cold, Rfo_cold, fuel)
 
-    Tfo = np.max(Tf[:,-1])
-    Tci = np.max(Tcl[:,0])
-    Tco = np.max(Tcl[:,-1])
+    Tfo, Tci, Tco = np.zeros(np.shape(Tf[:,0]))
+    
+    Tfo = np.mean(Tf[:,-1])
+    Tci = np.mean(Tcl[:,0])
+    Tco = np.mean(Tcl[:,-1])
 
     Rfo = Rfo_cold
     Rci = Rci_cold
@@ -198,9 +215,9 @@ def hot_geometry(q_lin, Rco_cold, Rci_cold, Rfo_cold, fuel):
 
         z, rf, Tf, rcl, Tcl, Tgap = thermal_analysis(q_lin, Rco_new, Rci_new, Rfo_new, fuel)
 
-        Tfo_new = np.max(Tf[:,-1])
-        Tci_new = np.max(Tcl[:,0])
-        Tco_new = np.max(Tcl[:,-1])
+        Tfo_new = np.mean(Tf[:,-1])
+        Tci_new = np.mean(Tcl[:,0])
+        Tco_new = np.mean(Tcl[:,-1])
 
         err = np.sqrt( (Rfo - Rfo_new)**2 + (Rco - Rco_new)**2 + (Rci - Rci_new)**2 )
 
@@ -230,25 +247,38 @@ def restructuring(q3, TD, rho1, rho2, rho3, R, x, wt_Pu, BU, Tfo, T1=1800, T2=16
     p3 = 1 - rho3/TD
 
     # conductivity integrals
-    I1 = lambda T0: quad(lambda T: k_fuel(T,x,p1,wt_Pu,BU), T1,T0)[0]
-    I2 = quad(lambda T: k_fuel(T,x,p2,wt_Pu,BU),T2,T1)[0]
-    I3 = quad(lambda T: k_fuel(T,x,p3,wt_Pu,BU),Tfo,T1)[0]
-
-    print(I3)
+    I1 = lambda T0: tc_integral(T0, T1, x, p1, wt_Pu, BU)
+    I2 = tc_integral(T1, T2, x, p2, wt_Pu, BU)
+    I3 = tc_integral(T2, Tfo, x, p3, wt_Pu, BU)
 
     r2 = np.sqrt( R**2 * ( 1 - 4*np.pi*I3/q3 ) )
 
-    def f(r1):
-        return q2*(r2**2 - r1**2)/(4*np.pi*R**2) - q3*r2**2*(rho2-rho3)*np.log(r2/r1) / (2*np.pi*R**2*rho3) - I2
+    C2 = q3*r2**2*(rho2-rho3)/(4*np.pi*R**2*rho3)
 
-    r1 = fsolve(f, r2)
+    def f1(r1):
+        return q2*(r2**2 - r1**2)/(4*np.pi*R**2) - q3*r2**2*(rho2-rho3)*np.log(r2/r1) - I2
+
+    r1 = fsolve(f1, r2)
     
     r0 = np.sqrt( (rho1-rho2)*r1**2/rho1 + (rho2-rho3)*r2**2/rho1 )
 
-    def f(T0):
-        return q1*(r1**2 - r0**2)/(4*np.pi*R**2) - q3*r0**2*np.log(r1/r0) / (2*np.pi*R**2) - I1(T0)
+    C1 = q1*r0**2/(4*np.pi*R**2)
+    def f2(T0):
+        return q1 * (r1**2 - r0**2) / (4*np.pi*R**2) - C1*np.log(r1/r0) - I1(T0)
+        # print(f"T0: {T0}, f2(T0) output: {result}")
         
+  
 
-    T0 = fsolve(f, T1)
+    T0 = fsolve(f2, T1)
 
-    return r0[0], r1, r2, T0[0]
+    print("\n\nRestructuring")
+    print(f"r0 = {r0*1000}, r1 = {r1*1000}, r2 = {r2*1000}, R = {R*1000}")
+    print(f"T0 = {T0}, T1 = {T1}, T2 = {T2}, Tfo = {Tfo}")
+
+    # plt.plot( np.linspace(0, r2), f1(np.linspace(0, r2)) )
+    plt.plot( np.linspace(T1,T1+1000), f2( np.linspace(T1,T1+1000) ))
+    plt.plot( np.linspace(T1,T1+1000), np.zeros(50))
+    plt.show()
+
+
+    return r0, r1, r2, T0
