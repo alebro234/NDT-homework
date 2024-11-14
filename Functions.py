@@ -71,17 +71,17 @@ def Th_Analysis(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, H_node, Por, Pu, 
 def Th_Expansion(R_co_cold, T_co, R_ci_cold, T_ci, R_fo_cold, T_fo, R_fi_cold, T_fi, alpha_l, T_ref):
     
         # Th. expansion of the clading inner radius:
-        # T_cl_avg = np.mean(np.array([T_co, T_ci]), axis = 0)
+        T_cl_avg = np.mean(np.array([T_co, T_ci]), axis = 0)
         R_co_hot = R_co_cold * (1 + co.epsilon_cl(T_co))
         
         # Th. expansion of the cladding outer radius found my impling mass conservation
-        R_ci_hot = R_ci_cold * (1 + co.epsilon_cl(T_ci))
-        # eps_cl_cold = co.epsilon_cl(T_ref)
-        # eps_cl_hot = co.epsilon_cl(T_cl_avg)
-        # R_ci_hot = np.sqrt((R_co_hot**2) - (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co_cold**2) - (R_ci_cold**2)))
+        # R_ci_hot = R_ci_cold * (1 + co.epsilon_cl(T_ci))
+        eps_cl_cold = co.epsilon_cl(T_ref)
+        eps_cl_hot = co.epsilon_cl(T_cl_avg)
+        R_ci_hot = np.sqrt((R_co_hot**2) - (co.rho_cl(eps_cl_cold) / co.rho_cl(eps_cl_hot)) * ((R_co_cold**2) - (R_ci_cold**2)))
         
         # Th. expansion of the fuel external radius: 
-        T_fu_avg = np.mean(np.array([T_fo, T_fi]), axis = 0) + 300
+        T_fu_avg = np.mean(np.array([T_fo, T_fi]), axis = 0)
         R_fo_hot = R_fo_cold * (1 + alpha_l * (T_fu_avg - T_ref))
         R_fi_hot = R_fi_cold * (1 + alpha_l * (T_fu_avg - T_ref))
 

@@ -51,12 +51,12 @@ def Pe_cool(T_C, u, D_h):
 
 # Linear thermal expansion
 def epsilon_cl(T_C):
-    epsilon_th = -3.101e-4 + 1.545e-5 * T_C + 2.75e-9 * T_C**2
+    epsilon_th = -3.101 * 1e-4 + 1.545 * 1e-5 * T_C + 2.75* 1e-9 * T_C**2
     return epsilon_th
 
 # Density
 def rho_cl(epsilon_th):
-    rho_cl = 7900 * (1 + epsilon_th)**-3 # kg/m^3
+    rho_cl = 7900 * (1 + epsilon_th)**(-3) # kg/m^3
     return rho_cl
 
 # Thermal conductivity 
