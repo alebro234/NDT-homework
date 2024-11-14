@@ -151,10 +151,10 @@ def swelling_strain(Bu):
     return eps_swe_tot_fuel 
 
 # Burnup
-def burnup(q_prime, L_act, R, rho, t_irr): # togliere ossigeno alla massa del fuel (?)
-    Bu = (q_prime * L_act * 1e-6 * t_irr * 24) / (L_act * np.pi * R**2 * rho * 1e-6 * 1e-3) # GWd/tHM
+def burnup(q_prime, L_act, R, rho, t_irr):
+    # togliere ossigeno alla massa del fuel (?)
+    Bu = (q_prime * L_act * 1e-9 * t_irr) / (L_act * np.pi * R**2 * rho * 1e-3) # GWd/tHM
     return Bu
-
 
     
 
