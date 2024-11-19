@@ -61,7 +61,7 @@ def Th_Analysis(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, H_node, Por, Pu, 
                 T_map[i, j + 1] = T_map[i, j] + (f * q * np.log(R[j] / R[j + 1])) / (2 * np.pi * co.k_gap(T_map[i, j]))
 
             elif R[j] in R_fu[:-1]:
-                T_map[i, j + 1] = T_map[i, j] + (f * q * ((R[j]**2) - (R[j + 1]**2))) / (4 * np.pi * (R_fo[i])**2 * co.k_fuel(Bu, Por, Pu, T_map[i, j]))
+                T_map[i, j + 1] = T_map[i, j] + (f * q * R[j] * (R[j] - R[j + 1])) / (2 * np.pi * (R_fo[i]**2) * co.k_fuel(Bu, Por, Pu, T_map[i, j]))
 
     # And we pack the data in a more convenient way:
     T_ax_vec = np.array((T_map[:, 0], T_map[:, n - 1], T_map[:, 2*n - 1], T_map[:, - 1]))

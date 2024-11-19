@@ -132,7 +132,7 @@ plt.axvline(x = R_fi_vec[9], color = 'blue')
 plt.axvline(x = R_fi_hot[9], color = 'red')
 plt.legend()
 
-# plt.show()
+plt.show()
 
 # print(f'The cold temperature profiles at the interfaces are ', T_cold_v)
 # print(f'The hot temperature profiles at the interfaces are', T_hot_v)
@@ -144,8 +144,3 @@ plt.legend()
 # R_fo_hot2 = R_fo_vec * (1 + alpha_l * (T_fu_avg - T_ref))
 # print(t_gap - (R_ci_hot2 - R_fo_hot2))
 
-L = 18
-if L > 20:
-    print(f'Emi ha un cazzone')
-else:
-    print(f'Emi ha il cazzo solo di', L, 'cm')
