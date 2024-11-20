@@ -1,0 +1,116 @@
+"""
+The script to test the thermal analisys for the homework:
+"""
+import numpy as np
+import matplotlib.pyplot as plt
+import Functions_optimized as fun
+import Correlations as co
+
+%reload_ext autoreload
+%autoreload 2
+
+
+# Data 
+    # Irradiation time and power data:
+x =  2 - 1.957
+q1_max = 38.7 * 1e3 #[W/m] linear power (in the central node)
+node_coef = np.array([0.527, 0.737, 0.868, 0.958, 1, 0.983, 0.912, 0.802, 0.658, 0.498])
+t_irr = 360*24 #[days] irradiation period
+    # Thermo - hydraulic specifications for the coolant (Sodium: Na):
+pin_p = 8.275 * 1e-3 #[m] the pin pitch
+Tc_in = 395 #[°C] coolant inlet temperature
+pc_in = 0.1 #[MPa] coolant inlet pressure
+mdot = 0.049 #[kg/s] coolant mass flow rate 
+    # Fuel - Pin specification for MOX fuel:
+        # Geometrical properties:
+H_a = 850 * 1e-3 #[m] fuel column active height
+H_p = 7 * 1e-3 #[m] fuel pellet height
+R_fo = (5.42 / 2) * 1e-3 #[m] fuel pellet outer radius
+R_co = (6.55 / 2) * 1e-3 #[m] cladding outer radius
+D_grain = 10 * 1e-6 #[m] fuel grain diamter 
+        # Material properties:
+rho_TD = 11.31 * 1e3 #[kg/m^3] fuel theoretical density 
+P = (1 - 0.945) #[-] fuel porosity
+rho_MOX = rho_TD * (1 - P) #[kg/m^3] fuel real density
+O_M = 1.957 #[-] oxigen to metal rateo
+Tg_in = 20 #[°C] initial tempearture of filling gas
+pg_in = 0.1 #[MPa] initial pressure of filling gas
+        # Fuel chemical/material properties:
+Pu = 0.29 #[wt%] The concentration of plution in weight percentage
+Bu = 0
+# Bu = co.burnup(q1_max, H_a, R_fo, rho_MOX, t_irr)
+T_melt = co.t_melt_fuel(Pu, Bu)
+z_nodes = np.linspace(0, H_a, 100)
+z_nodes_ten = np.array([0.0425, 0.1275, 0.2125, 0.2975, 0.3825, 0.4675, 0.5525, 0.6375, 0.7225, 0.8075]) #m
+q1_vec_ten = q1_max * node_coef
+q1_poly = np.poly1d(np.polyfit(z_nodes_ten, q1_vec_ten, deg=4))
+q1_vec = q1_poly(z_nodes)
+t_gap = 0.00010 #[m]
+f = 0.5 # The form factor accounting for the triangular pitch and our positioning in the equivalent channel
+R_co_vec = np.ones(np.size(z_nodes)) * R_co # The vecotr of the cladding outer radius along z in COLD GEOMETRY
+R_ci_vec = np.ones(np.size(z_nodes)) * (R_fo + t_gap) # The vecotr of the cladding inner radius along z in COLD GEOMETRY (GUESS)
+R_fo_vec = np.ones(np.size(z_nodes)) * R_fo # The vecotr of the fuel outer radius along z in COLD GEOMETRY
+R_fi_vec = np.zeros(np.size(z_nodes)) # The vecotr of the fuel inner radius along z in COLD GEOMETRY
+
+
+# [ T_cool, T_cl, R_cl, T_gap, R_gap, T_fu, R_fu, u_cool, h_cool, Imax] = fun.T_axial(q1_vec, mdot, Tc_in, pin_p, R_co_vec, R_ci_vec, R_fo_vec, R_fi_vec, z_nodes, x, P, Pu, Bu, f)
+[ T_cool, T_cl, R_cl, T_gap, R_gap, T_fu, R_fu, u_cool, h_cool,  k_fuel_iterative, Tfu_max_0, count] = fun.T_axial(q1_vec, mdot, Tc_in, pin_p, R_co_vec, R_ci_vec, R_fo_vec, R_fi_vec, z_nodes,  P, Pu, Bu, f)
+
+
+
+r_plot = np.concatenate((R_cl[:-1], R_gap[:-1], R_fu))
+T_matrix = np.hstack((T_cl[:, :-1], T_gap[:, :-1], T_fu))
+
+plt.figure(1)
+plt.plot(T_cool, z_nodes, label = '$T_{cool}$')
+plt.plot(T_cl[:,0], z_nodes, label = '$T_{co}$')
+plt.plot(T_cl[:, -1], z_nodes, label = '$T_{ci}$')
+plt.plot(T_gap[:, -1], z_nodes, label = '$T_{fo}$')
+plt.plot(T_fu[:, -1], z_nodes, label = '$T_{fi}$')
+plt.axvline(x = T_melt)
+plt.xlabel('Temperature along z-axis $[°C]$')
+plt.ylabel('z-axis of fuel column height $[m]$')
+plt.legend()
+
+
+plt.figure()
+plt.plot(r_plot, T_matrix[50, :])
+plt.xlabel('r-axis of the fuel column')
+plt.ylabel('Tempertaure profile [°C]')
+plt.axvline(x = R_co_vec[4], color = 'green')
+plt.axvline(x = R_ci_vec[4], color = 'yellow')
+plt.axvline(x = R_fo_vec[4], color = 'orange')
+plt.axvline(x = R_fi_vec[4], color = 'red')
+print(q1_vec[50])
+print(np.max(T_fu))
+
+
+alpha_fuel = 1.2e-5
+
+
+[R_fo_exp, R_ci_exp, R_co_exp, T_cool_z_exp, T_co_z_exp, T_cl_exp, R_cl_exp, T_gap_exp, R_gap_exp, T_fu_exp, R_fu_exp, u_cool_exp, h_cool_exp, count] = fun.Hot_geometry(alpha_fuel, T_gap, T_cl, T_fu, R_fo_vec, R_ci_vec, R_co_vec, q1_vec, mdot, Tc_in, pin_p, R_fi_vec,x, P, Pu, Bu, f, z_nodes )
+
+
+T_fi_z_exp = T_fu_exp[:, -1]
+T_ci_z_exp = T_cl_exp[:, -1]
+T_fo_z_exp = T_gap_exp[:, -1]
+
+plt.figure(1)
+plt.plot(T_cool_z_exp ,z_nodes )
+plt.plot( T_co_z_exp ,z_nodes )
+plt.plot( T_ci_z_exp,z_nodes )
+plt.plot(T_ci_z_exp,z_nodes)
+plt.plot( T_fo_z_exp,z_nodes )
+plt.plot( T_fi_z_exp,z_nodes )
+plt.axvline(T_melt)
+
+print(np.max(T_fi_z_exp))
+
+plt.figure()
+plt.plot(R_ci_exp, z_nodes)
+plt.plot(R_co_exp, z_nodes)
+plt.plot(R_fo_exp, z_nodes)
+plt.axvline(R_ci_vec[5])
+plt.axvline(R_co_vec[5])
+plt.axvline(R_fo_vec[5])
+plt.axvline(0.002)
