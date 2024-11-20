@@ -1,0 +1,297 @@
+import numpy as np
+import Correlations as co
+from scipy.optimize import fsolve
+import matplotlib.pyplot as plt
+
+#RESOLUTION OF T MAP W/ ITERATIVE PROCEDURE IN FUEL 
+
+def T_axial(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, z_nodes, Por, Pu, Bu, f):
+
+    A_ch = (np.sqrt(3) / 4) * (p**2) - (np.pi * (R_co**2)) / 2
+    D_h = (4 * A_ch) / (np.pi * R_co)
+    arrays = [np.zeros(np.size(q1_vec)) for _ in range(3)]
+    u_cool, h_cool, T_co = arrays
+    # q1_vec = q1_vec*f
+    n = 100
+    T_cool = np.zeros(np.size(q1_vec))
+    T_cool[0] = T_in
+    T_cl = np.zeros((np.size(q1_vec), n))
+    T_gap = np.zeros((np.size(q1_vec), n))
+    T_fu = np.zeros((np.size(q1_vec), n))
+
+    for i in list(range(len(z_nodes)-1)):
+        
+        T_cool[i + 1] = T_cool[i] + np.trapz(q1_vec[i:i+2]*f, z_nodes[i:i+2]) / (mdot * co.cp_cool(T_cool[i]))
+    for i in list(range(len(z_nodes))):    
+        u_cool[i] = mdot / (co.rho_cool(T_cool[i]) * A_ch[i])
+        h_cool[i] = (co.Nu_cool(co.Pe_cool(T_cool[i], u_cool[i], D_h[i])) * co.k_cool(T_cool[i])) / D_h[i]
+        T_co[i] = T_cool[i] + q1_vec[i]*f / (2 * np.pi * R_co[i] * h_cool[i])
+        
+        R_cl = np.linspace(R_co[i], R_ci[i], n) # Discretize the radius of the cladding
+        T_cl[i, 0] = T_co[i] # Set the initial temperature in the cladding to the last temperature in the coolant
+        
+        for j in range(np.size(R_cl) - 1): # j is the index spanning over the dr for the cladding
+            T_cl[i, j + 1] = T_cl[i, j] + (q1_vec[i] * np.log(R_cl[j] / R_cl[j + 1])) / (2 * np.pi * co.k_cl(T_cl[i, j])) 
+            
+        R_gap = np.linspace(R_ci[i], R_fo[i], n) # Discretize the radius of the gap
+        T_gap[i, 0] = T_cl[i, -1] # Set the initial temperature in the gap to the last temperature in the cladding
+        
+        # for k in range(np.size(R_gap) - 1): # k is the index spanning over the dr for the gap
+            # Calculate the temperature at the next radial position in the gap
+            # T_gap[i, k + 1] = T_gap[i, k] + (q1_vec[i] * (R_gap[k] - R_gap[k + 1]))/ (2 * np.pi * R_gap[k] * co.k_gap(T_gap[i, k]))
+
+        fun = lambda T: T - T_cl[i,-1] - (q1_vec[i] * (R_gap[0] - R_gap[-1])) / (2*np.pi*R_fo[i]*co.k_gap( (T_gap[i, 0] + T)/2 ))
+
+        T_gap[i, -1] = fsolve(fun,T_gap[i, 0] )
+
+
+            
+        R_fu = np.linspace(R_fo[i], R_fi[i], n) # Discretize the radius of the fuel
+        T_fu[i, 0] = T_gap[i, -1] # Set the initial temperature in the fuel to the last temperature in the gap
+        Tfu_max_0 = T_fu[i, 0] + q1_vec[i]/(4*np.pi*co.k_fuel(Bu, Por, Pu, T_fu[i, 0]))
+        err = 100
+        toll = 1e-10
+        count = 0
+        while err > toll:
+            Tfu_max_new = T_fu[i, 0] + q1_vec[i]/(4*np.pi*co.k_fuel(Bu, Por, Pu, (T_fu[i, 0] + Tfu_max_0)/2))
+            err = abs(Tfu_max_0 - Tfu_max_new)
+            Tfu_max_0 = Tfu_max_new
+            count = count + 1
+        
+        k_fuel_iterative = co.k_fuel(Bu, Por, Pu, (T_fu[i, 0] + Tfu_max_0)/2)
+        for l in range(np.size(R_fu) - 1): # l is the index spanning over the dr for the fuel
+            # Calculate the temperature at the next radial position in the fuel
+            T_fu_fun = lambda r: T_fu[i, 0] + q1_vec[i]/(4*np.pi*k_fuel_iterative)*(1-r**2/R_fo[i]**2)
+            T_fu[i, l + 1] = T_fu_fun(R_fu[l + 1]) 
+
+    return [ T_cool, T_cl, R_cl, T_gap, R_gap, T_fu, R_fu, u_cool, h_cool, k_fuel_iterative, Tfu_max_0, count]
+
+
+
+#solve with conductivity integral & PARABOLIC
+
+# def T_axial(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, z_nodes,x, Por, Pu, Bu, f):
+
+#     A_ch = (np.sqrt(3) / 4) * (p**2) - (np.pi * (R_co**2)) / 2
+#     D_h = (4 * A_ch) / (np.pi * R_co)
+#     arrays = [np.zeros(np.size(q1_vec)) for _ in range(3)]
+#     u_cool, h_cool, T_co = arrays
+#     q1_vec = q1_vec*f
+#     n = 100
+#     T_cool = np.zeros(np.size(q1_vec))
+#     I_Tf_max = np.zeros(np.size(q1_vec))
+
+#     T_cool[0] = T_in
+#     T_cl = np.zeros((np.size(q1_vec), n))
+#     T_gap = np.zeros((np.size(q1_vec), n))
+#     T_fu = np.zeros((np.size(q1_vec), n))
+
+#     for i in list(range(len(z_nodes)-1)):
+        
+#         T_cool[i + 1] = T_cool[i] + np.trapz(q1_vec[i:i+2], z_nodes[i:i+2]) / (mdot * co.cp_cool(T_cool[i]))
+#     for i in list(range(len(z_nodes))):    
+#         u_cool[i] = mdot / (co.rho_cool(T_cool[i]) * A_ch[i])
+#         h_cool[i] = (co.Nu_cool(co.Pe_cool(T_cool[i], u_cool[i], D_h[i])) * co.k_cool(T_cool[i])) / D_h[i]
+#         T_co[i] = T_cool[i] + q1_vec[i] / (2 * np.pi * R_co[i] * h_cool[i])
+        
+#         R_cl = np.linspace(R_co[i], R_ci[i], n) # Discretize the radius of the cladding
+#         T_cl[i, 0] = T_co[i] # Set the initial temperature in the cladding to the last temperature in the coolant
+        
+#         for j in range(np.size(R_cl) - 1): # j is the index spanning over the dr for the cladding
+#             T_cl[i, j + 1] = T_cl[i, j] + (q1_vec[i] * np.log(R_cl[j] / R_cl[j + 1])) / (2 * np.pi * co.k_cl(T_cl[i, j])) 
+            
+#         R_gap = np.linspace(R_ci[i], R_fo[i], n) # Discretize the radius of the gap
+#         T_gap[i, 0] = T_cl[i, -1] # Set the initial temperature in the gap to the last temperature in the cladding
+        
+#         # for k in range(np.size(R_gap) - 1): # k is the index spanning over the dr for the gap
+#             # Calculate the temperature at the next radial position in the gap
+#             # T_gap[i, k + 1] = T_gap[i, k] + (q1_vec[i] * (R_gap[k] - R_gap[k + 1]))/ (2 * np.pi * R_gap[k] * co.k_gap(T_gap[i, k]))
+
+#         fun = lambda T: T - T_cl[i,-1] - (q1_vec[i] * (R_gap[0] - R_gap[-1])) / (2*np.pi*R_fo[i]*co.k_gap( (T_gap[i, 0] + T)/2 ))
+
+#         T_gap[i, -1] = fsolve(fun,T_gap[i, 0] )
+
+#         R_fu = np.linspace(R_fo[i], R_fi[i], n) # Discretize the radius of the fuel
+#         T_fu[i, 0] = T_gap[i, -1] # Set the initial temperature in the fuel to the last temperature in the gap
+
+#         I_Tf_max[i] = tc_integral(T_fu[i,0], 0, x, Por, Pu, Bu) + q1_vec[i]/4/np.pi
+#         Tf_max_fun = lambda T: I_Tf_max[i] - tc_integral(T, 0, x, Por, Pu, Bu)
+#         T_fu[i,-1] = fsolve(Tf_max_fun, 2000)        
+#         for l in range(np.size(R_fu) - 1): # l is the index spanning over the dr for the fuel
+#              # Calculate the temperature at the next radial position in the fuel
+#             T_fu_fun = lambda r: T_fu[i, 0] + (T_fu[i,-1] - T_fu[i, 0])*(1-r**2/R_fo[i]**2)
+#             T_fu[i, l + 1] = T_fu_fun(R_fu[l + 1]) 
+
+#     return [ T_cool, T_cl, R_cl, T_gap, R_gap, T_fu, R_fu, u_cool, h_cool, I_Tf_max]
+
+#with rivisited f usage
+
+
+# def T_axial(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, z_nodes,x, Por, Pu, Bu, f):
+
+#     A_ch = (np.sqrt(3) / 4) * (p**2) - (np.pi * (R_co**2)) / 2
+#     D_h = (4 * A_ch) / (np.pi * R_co)
+#     arrays = [np.zeros(np.size(q1_vec)) for _ in range(3)]
+#     u_cool, h_cool, T_co = arrays
+#     n = 100
+#     T_cool = np.zeros(np.size(q1_vec))
+#     I_Tf_max = np.zeros(np.size(q1_vec))
+
+#     T_cool[0] = T_in
+#     T_cl = np.zeros((np.size(q1_vec), n))
+#     T_gap = np.zeros((np.size(q1_vec), n))
+#     T_fu = np.zeros((np.size(q1_vec), n))
+
+#     for i in list(range(len(z_nodes)-1)):
+        
+#         T_cool[i + 1] = T_cool[i] + np.trapz(q1_vec[i:i+2]*f, z_nodes[i:i+2]) / (mdot * co.cp_cool(T_cool[i]))
+#     for i in list(range(len(z_nodes))):    
+#         u_cool[i] = mdot / (co.rho_cool(T_cool[i]) * A_ch[i])
+#         h_cool[i] = (co.Nu_cool(co.Pe_cool(T_cool[i], u_cool[i], D_h[i])) * co.k_cool(T_cool[i])) / D_h[i]
+#         T_co[i] = T_cool[i] + q1_vec[i]*f / (2 * np.pi * R_co[i] * h_cool[i])
+        
+#         R_cl = np.linspace(R_co[i], R_ci[i], n) # Discretize the radius of the cladding
+#         T_cl[i, 0] = T_co[i] # Set the initial temperature in the cladding to the last temperature in the coolant
+        
+#         for j in range(np.size(R_cl) - 1): # j is the index spanning over the dr for the cladding
+#             T_cl[i, j + 1] = T_cl[i, j] + (q1_vec[i]  * np.log(R_cl[j] / R_cl[j + 1])) / (2 * np.pi * co.k_cl(T_cl[i, j])) 
+            
+#         R_gap = np.linspace(R_ci[i], R_fo[i], n) # Discretize the radius of the gap
+#         T_gap[i, 0] = T_cl[i, -1] # Set the initial temperature in the gap to the last temperature in the cladding
+        
+#         # for k in range(np.size(R_gap) - 1): # k is the index spanning over the dr for the gap
+#             # Calculate the temperature at the next radial position in the gap
+#             # T_gap[i, k + 1] = T_gap[i, k] + (q1_vec[i] * (R_gap[k] - R_gap[k + 1]))/ (2 * np.pi * R_gap[k] * co.k_gap(T_gap[i, k]))
+
+#         fun = lambda T: T - T_cl[i,-1] - (q1_vec[i]  * (R_gap[0] - R_gap[-1])) / (2*np.pi*R_fo[i]*co.k_gap( (T_gap[i, 0] + T)/2 ))
+
+#         T_gap[i, -1] = fsolve(fun,T_gap[i, 0] )
+
+#         R_fu = np.linspace(R_fo[i], R_fi[i], n) # Discretize the radius of the fuel
+#         T_fu[i, 0] = T_gap[i, -1] # Set the initial temperature in the fuel to the last temperature in the gap
+
+#         I_Tf_max[i] = tc_integral(T_fu[i,0], 0, x, Por, Pu, Bu) + q1_vec[i]/4/np.pi
+#         Tf_max_fun = lambda T: I_Tf_max[i] - tc_integral(T, 0, x, Por, Pu, Bu)
+#         T_fu[i,-1] = fsolve(Tf_max_fun, 2500)        
+#         for l in range(np.size(R_fu) - 1): # l is the index spanning over the dr for the fuel
+#              # Calculate the temperature at the next radial position in the fuel
+#             T_fu_fun = lambda r: T_fu[i, 0] + (T_fu[i,-1] - T_fu[i, 0])*(1-r**2/R_fo[i]**2)
+#             T_fu[i, l + 1] = T_fu_fun(R_fu[l + 1]) 
+
+#     return [ T_cool, T_cl, R_cl, T_gap, R_gap, T_fu, R_fu, u_cool, h_cool, I_Tf_max]
+
+
+
+def T_jumps(q1_vec, mdot, T_in, p, R_co, R_ci, R_fo, R_fi, z_nodes, Por, Pu, Bu, f):
+
+    A_ch = (np.sqrt(3) / 4) * (p**2) - (np.pi * (R_co**2)) / 2
+    D_h = (4 * A_ch) / (np.pi * R_co)
+    arrays = [np.zeros(np.size(q1_vec)) for _ in range(3)]
+    u_cool, h_cool, T_co = arrays
+    q1_vec = q1_vec*f
+    n = 100
+    T_cool = np.zeros(np.size(q1_vec))
+    T_cool[0] = T_in
+    T_cl = np.zeros((np.size(q1_vec), n))
+    T_gap = np.zeros((np.size(q1_vec), n))
+    T_fu = np.zeros((np.size(q1_vec), n))
+
+    for i in list(range(len(z_nodes)-1)):
+        
+        T_cool[i + 1] = T_cool[i] + np.trapz(q1_vec[i:i+2], z_nodes[i:i+2]) / (mdot * co.cp_cool(T_cool[i]))
+    for i in list(range(len(z_nodes))):    
+        u_cool[i] = mdot / (co.rho_cool(T_cool[i]) * A_ch[i])
+        h_cool[i] = (co.Nu_cool(co.Pe_cool(T_cool[i], u_cool[i], D_h[i])) * co.k_cool(T_cool[i])) / D_h[i]
+        T_co[i] = T_cool[i] + q1_vec[i] / (2 * np.pi * R_co[i] * h_cool[i])
+        
+        R_cl = np.linspace(R_co[i], R_ci[i], n) # Discretize the radius of the cladding
+        T_cl[i, 0] = T_co[i] # Set the initial temperature in the cladding to the last temperature in the coolant
+        
+        T_cl[i, -1] = T_cl[i, 0] + (q1_vec[i] * np.log(R_co[i] / R_ci[i])) / (2 * np.pi * co.k_cl(T_cl[i, 0])) 
+        
+        R_gap = np.linspace(R_ci[i], R_fo[i], n) # Discretize the radius of the gap
+        T_gap[i, 0] = T_cl[i, -1] # Set the initial temperature in the gap to the last temperature in the cladding
+        
+        # for k in range(np.size(R_gap) - 1): # k is the index spanning over the dr for the gap
+            # Calculate the temperature at the next radial position in the gap
+            # T_gap[i, k + 1] = T_gap[i, k] + (q1_vec[i] * (R_gap[k] - R_gap[k + 1]))/ (2 * np.pi * R_gap[k] * co.k_gap(T_gap[i, k]))
+
+        f = lambda T: T - T_cl[i,-1] - (q1_vec[i] * (R_gap[0] - R_gap[-1])) / (2*np.pi*R_fo[i]*co.k_gap( (T_gap[i, 0] + T)/2 ))
+
+        T_gap[i, -1] = fsolve(f,T_gap[i, 0] )
+
+
+            
+        R_fu = np.linspace(R_fo[i], R_fi[i], n) # Discretize the radius of the fuel
+        T_fu[i, 0] = T_gap[i, -1] # Set the initial temperature in the fuel to the last temperature in the gap
+        Tfu_max_0 = T_fu[i, 0] + q1_vec[i]/(4*np.pi*co.k_fuel(Bu, Por, Pu, T_fu[i, 0]))
+        err = 100
+        toll = 1e-10
+        count = 0
+        while err > toll:
+            Tfu_max_new = T_fu[i, 0] + q1_vec[i]/(4*np.pi*co.k_fuel(Bu, Por, Pu, (T_fu[i, 0] + Tfu_max_0)/2))
+            err = abs(Tfu_max_0 - Tfu_max_new)
+            Tfu_max_0 = Tfu_max_new
+            count = count + 1
+        k_fuel_iterative = co.k_fuel(Bu, Por, Pu, (T_fu[i, 0] + Tfu_max_0)/2 )
+        T_fu[i, -1] = T_fu[i, 0] + q1_vec[i]/(4*np.pi*k_fuel_iterative)
+
+
+
+    return [ T_cool, T_cl, R_cl, T_gap, R_gap, T_fu, R_fu, u_cool, h_cool, k_fuel_iterative, Tfu_max_0, count]
+
+
+
+def Hot_geometry(alpha_fuel, T_gap, T_cl,  T_fu, R_fo_vec, R_ci_vec, R_co_vec, q1_vec, mdot, Tc_in, pin_p, R_fi_vec,x,  P, Pu, Bu, f, z_nodes ):
+
+    err = 100
+    toll = 1e-10
+    count = 0
+    T_fo_z = T_gap[:, -1]
+    T_ci_z = T_cl[:, -1]
+    T_co_z = T_cl[:, 0]
+    T_fi_z = T_fu[:, -1]
+
+    while toll < err :
+        #compute the new radii
+        R_fo_exp = R_fo_vec*(1+alpha_fuel*((T_fo_z+T_fi_z)*0.5 - 25))
+        R_ci_exp = R_ci_vec*(1+co.epsilon_cl(T_ci_z))
+        R_co_exp = R_co_vec*(1+co.epsilon_cl(T_co_z))
+        #compute new T profile, w/ expanded radii
+
+        [ T_cool_z_exp, T_cl_exp, R_cl_exp, T_gap_exp, R_gap_exp, T_fu_exp, R_fu_exp,  u_cool_exp, h_cool_exp, k_fuel_iterative, Tfu_max_0, count] = T_axial(q1_vec, mdot, Tc_in, pin_p, R_co_exp, R_ci_exp, R_fo_exp, R_fi_vec, z_nodes,  P, Pu, Bu, f) 
+        T_fi_z_exp = T_fu_exp[:, -1]                                                                                                                        
+        T_co_z_exp = T_cl_exp[:, 0]
+        err = sum(abs( T_fi_z_exp - T_fi_z )) #error defined as difference between Tfi at two subsequent iterations
+        T_co_z = T_cl_exp[:, 0]
+        T_ci_z = T_cl_exp[:, -1]
+        T_fo_z = T_fu_exp[:, 0]
+        T_fi_z = T_fu_exp[:, -1]
+        count = count+1
+    return [R_fo_exp, R_ci_exp, R_co_exp, T_cool_z_exp, T_co_z_exp, T_cl_exp, R_cl_exp, T_gap_exp, R_gap_exp, T_fu_exp, R_fu_exp, u_cool_exp, h_cool_exp, count]
+
+
+def cond_integral(T0, T1, Bu, p, Pu):
+    I = np.trapz( co.k_fuel(Bu, p, Pu, np.linspace(T0, T1, 100)), np.linspace(T0, T1, 100))
+    return I 
+
+def tc_integral(Ti, To, x, p, wt_Pu, BU):
+    # fuel thermal conductivity integral [W m^-1]
+    Ti = Ti + 273.15 # K
+    To = To + 273.15 # K
+    A = 0.01926 + 1.06e-6 * x + 2.63e-8 * wt_Pu
+    B = 2.39e-4 + 1.37e-13 * wt_Pu
+    D = 5.27e9
+    E = 17109.5
+
+    ko_int = ( np.log((A + B*Ti)/(A + B*To))/B + D*( np.exp(-1/To) - np.exp(-1/Ti) )/E )*(1-p)**2.5
+
+    k_int = 1.755*(Ti-To) + ( ko_int - 1.755*(Ti-To) )*np.exp(-BU/128.75)
+    return k_int
+
+# def restructuring(q3, R, rho1, rho2, rho3, T1, T2, Tfo, x, wt_Pu, BU)
+    
+
+
+
+#     return[r0, r1, r2, T0]
