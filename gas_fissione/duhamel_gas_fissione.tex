@@ -95,7 +95,7 @@ applicando una separazione di variabili \(w(r,t,s) = \theta(t,s)\phi(r)\)
 
 la soluzione della parte temporale è
 \[
-  \theta(t,s) = e^{-Dk^2t}
+  \theta(t,s) = Ce^{-Dk^2t}
 \]
 
 espandendo la parte spaziale si ottiene
@@ -121,29 +121,29 @@ applicando ora la condizione iniziale si trovano i coefficienti di Fourier \(b_n
   y\dot{F}r = \sum_{n=1}^{\infty} b_n \sin(k_nr)
 \]
 \[
-  b_n = \frac{2y\dot{F}}{R}\int_0^R r\sin(k_nr) \, dr = \frac{2y\dot{F}}{R}\frac{(-1)^{n+1}}{k_n}
+  b_n = \frac{2y\dot{F}}{R}\underbrace{\int_0^R r\sin(k_nr)}_{R(-1)^{n+1} / k_n} \, dr = 2y\dot{F}\frac{(-1)^{n+1}}{k_n}
 \]
 
 si ha quindi la soluzione del problema omogeneo
 \[
-  w(r,t,s) = \frac{2y\dot{F}}{R}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}e^{-Dk_n^2t}
+  w(r,t,s) = 2y\dot{F}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}e^{-Dk_n^2t} \quad [\text{atomi}/m^3s]
 \]
 
 Infine, integrando si ottiene la soluzione del problema non omogeneo
 \[
-  u(r,t) = \int_0^t w(r,t-s,s) \, ds = \frac{2y\dot{F}}{R}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}\int_0^t e^{-Dk_n^2(t-s)} \, ds
+  u(r,t) = \int_0^t w(r,t-s,s) \, ds = 2y\dot{F}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}\int_0^t e^{-Dk_n^2(t-s)} \, ds
 \]
 \[
-  u(r,t) = \frac{2y\dot{F}}{RD}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\frac{\sin(k_nr)}{r}\left(1 - e^{-Dk_n^2t}\right)
+  u(r,t) = \frac{2y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\frac{\sin(k_nr)}{r}\left(1 - e^{-Dk_n^2t}\right)\quad [\text{atomi}/m^3]
 \]
 
 Per trovare il numero di atomi ritenuti nel grano si integra la concentrazione su tutto il volume
 \[
-  N_R(t) = \int_V u(r,t) dV = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\piy\dot{F}}{RD}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
+  N_R(t) = \int_V u(r,t) dV = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\pi y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
 \]
 esplicitando \(k_n\) nel risultato si ottiene
 \[
-  N_R(t) = \frac{8y\dot{F}R^3}{\pi^3D}\sum_{n=1}^\infty \frac{1 - e^{-D\left( n\pi/R \right)^2t}} {n^4}
+  N_R(t) = \frac{8y\dot{F}R^5}{\pi^3D}\sum_{n=1}^\infty \frac{1 - e^{-D\left( n\pi/R \right)^2t}} {n^4}
 \]
 
 \end{document}
