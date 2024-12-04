@@ -1,0 +1,150 @@
+\documentclass{article} 
+
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc}    
+\usepackage[english]{babel} 
+\usepackage{amsmath}        
+\usepackage{amssymb}        
+\usepackage{amsfonts}       
+\usepackage{graphicx}       
+\usepackage{hyperref}       
+\usepackage{geometry}       
+\usepackage{enumitem}       
+\usepackage{titling}
+\usepackage{braket}
+\usepackage{graphicx}
+\usepackage{multicol}
+\usepackage{lipsum}
+
+% Page layout
+\geometry{margin=1cm}      
+\geometry{bottom=2cm}
+\geometry{top=0.5cm}
+\setlength{\parindent}{0pt} 
+\setlength{\parskip}{6pt}   % Space between paragraphs
+% math commands
+\newcommand{\Lagrange}{\mathcal{L}}
+\newcommand{\Hamilton}{\mathcal{H}}
+\newcommand{\deriv}[3][]{\frac{d^{#1} #2}{d #3^{#1}}}
+\newcommand{\pderiv}[3][]{\frac{\partial^{#1} #2}{\partial #3^{#1}}}
+
+\renewcommand{\labelenumii}{\theenumii}
+\renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
+
+\graphicspath{{../plots}}
+
+\pretitle{\begin{center}\LARGE}
+\posttitle{\par\end{center}\vskip 0.5em}
+
+\title{Metodo di Duhamel per equazione di ritenzione dei gas di fissione}
+\author{Capitano A. B.}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\section{Metodo di Duhamel}
+Sia \(u(r,t)\) la soluzione del problema di diffusione
+$$\[
+  \begin{cases}
+    \pderiv{u}{t} = D \nabla^2 u + f(r,t)  \quad & r \in (0, R), t > 0 \\
+    u(r,0) = 0 \quad & r \in [0, R], t = 0 \\
+    + BC
+  \end{cases}
+\]
+
+e \(w(r,t,s)\) famiglia di soluzioni con \(s \in [0,t]\) del problema omogeneo associato
+\[
+  \begin{cases}
+    \pderiv{w}{t} = D \nabla^2 w  \quad & r \in (0, R), t > 0 \\
+    w(r,0,s) = f(r,s) \quad & r \in [0, R], t = 0 \\
+    + BC
+  \end{cases} 
+\]
+
+per il principio di Duhamel la soluzione del problema non omogeneo è data da
+\[
+  u(r,t) = \int_0^t w(r,t-s,s) \, ds
+\]
+
+\section{Soluzione per gas di fissione}
+\[
+\begin{cases}
+  \pderiv{u}{t} = D \frac{1}{r^2}\pderiv{}{r}( r^2 \pderiv{u}{r} ) + y\dot{F}  \quad & r \in (0, R), t > 0 \\
+  u(r,0) = 0 \quad & r \in [0, R], t = 0 \\
+  \pderiv{u}{r}(0,t) = 0 \quad & t > 0\\
+  u(R, t) = 0 \quad & t > 0
+\end{cases}
+\]
+
+dove \( u(r,t) \; [\text{atomi}/m^3]\) concentrazione di gas di prodotti dal rateo di fissione \(y\dot{F}\) e ritenuti in un grano di raggio R. Il problema omogeneo associato è
+\[
+\begin{cases}
+  \pderiv{w}{t} = D \frac{1}{r^2}\pderiv{}{r}( r^2 \pderiv{w}{r} )  \quad & r \in (0, R), t > 0 \\
+  w(r,0,s) = y\dot{F} \quad & r \in [0, R], t = 0 \\
+  \pderiv{w}{r}(0,t) = 0 \quad & t > 0\\
+  w(R, t, s) = 0 \quad & t > 0
+  \end{cases}
+\]
+
+applicando una separazione di variabili \(w(r,t,s) = \theta(t,s)\phi(r)\)
+\[
+  \frac{1}{D\theta}\pderiv{\theta}{t} = \frac{1}{r^2\phi}\pderiv{}{r}( r^2 \pderiv{\phi}{r} ) = -k^2
+\]
+
+la soluzione della parte temporale è
+\[
+  \theta(t,s) = e^{-Dk^2t}
+\]
+
+espandendo la parte spaziale si ottiene
+\begin{align*}
+  \pderiv[2]{\phi}{r} + \frac{2}{r}\pderiv{\phi}{r} + k^2\phi = 0\\
+  r\pderiv[2]{\phi}{r} + 2\pderiv{\phi}{r} + k^2r\phi = 0\\
+  \pderiv[2]{}{r}(r\phi) + k^2r\phi = 0
+\end{align*}
+la cui soluzione è
+\[
+  \phi(r) = A\frac{\sin(kr)}{r} + B\frac{\cos(kr)}{r}
+\]
+applicando la condizione di Neumann omogenea in \(r = 0\) si ha \(B = 0\), mentre la condizione di Dirichlet in \(r = R\) impone
+\[
+  \sin(kR) = 0 \quad\Rightarrow\quad k_n = n\frac{\pi}{R}
+\]
+quindi la soluzione del problema omogeneo sarà della forma
+\[
+  w(r,t,s) = \sum_{n=1}^{\infty} b_n \frac{\sin(k_nr)}{r}e^{-Dk_n^2t}
+\]
+applicando ora la condizione iniziale si trovano i coefficienti di Fourier \(b_n\)
+\[
+  y\dot{F}r = \sum_{n=1}^{\infty} b_n \sin(k_nr)
+\]
+\[
+  b_n = \frac{2y\dot{F}}{R}\int_0^R r\sin(k_nr) \, dr = \frac{2y\dot{F}}{R}\frac{(-1)^{n+1}}{k_n}
+\]
+
+si ha quindi la soluzione del problema omogeneo
+\[
+  w(r,t,s) = \frac{2y\dot{F}}{R}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}e^{-Dk_n^2t}
+\]
+
+Infine, integrando si ottiene la soluzione del problema non omogeneo
+\[
+  u(r,t) = \int_0^t w(r,t-s,s) \, ds = \frac{2y\dot{F}}{R}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}\int_0^t e^{-Dk_n^2(t-s)} \, ds
+\]
+\[
+  u(r,t) = \frac{2y\dot{F}}{RD}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\frac{\sin(k_nr)}{r}\left(1 - e^{-Dk_n^2t}\right)
+\]
+
+Per trovare il numero di atomi ritenuti nel grano si integra la concentrazione su tutto il volume
+\[
+  N_R(t) = \int_V u(r,t) dV = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\piy\dot{F}}{RD}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
+\]
+esplicitando \(k_n\) nel risultato si ottiene
+\[
+  N_R(t) = \frac{8y\dot{F}R^3}{\pi^3D}\sum_{n=1}^\infty \frac{1 - e^{-D\left( n\pi/R \right)^2t}} {n^4}
+\]
+
+\end{document}
+
