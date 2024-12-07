@@ -31,12 +31,14 @@
 \renewcommand{\labelenumii}{\theenumii}
 \renewcommand{\theenumii}{\theenumi.\arabic{enumii}.}
 
+\newtheorem{theorem}{Theorem}[section]  % Theorem environment, numbered by section
+
 \graphicspath{{../plots}}
 
 \pretitle{\begin{center}\LARGE}
 \posttitle{\par\end{center}\vskip 0.5em}
 
-\title{Metodo di Duhamel per equazione di ritenzione dei gas di fissione}
+\title{Gas di fissione}
 \author{Capitano A. B.}
 \date{\today}
 
@@ -44,7 +46,17 @@
 
 \maketitle
 
-\section{Metodo di Duhamel}
+\section{Produzione}
+\[
+  \deriv{p}{t} = y\dot{F}
+\]
+\[
+  p(t) = y\dot{F}t
+\]
+
+\section{Ritenzione nel grano}
+
+\subsection{Metodo di Duhamel}
 Sia \(u(r,t)\) la soluzione del problema di diffusione
 $$\[
   \begin{cases}
@@ -63,12 +75,11 @@ e \(w(r,t,s)\) famiglia di soluzioni con \(s \in [0,t]\) del problema omogeneo a
   \end{cases} 
 \]
 
-per il principio di Duhamel la soluzione del problema non omogeneo è data da
+secondo il metodo di Duhamel la soluzione del problema non omogeneo è data da
 \[
   u(r,t) = \int_0^t w(r,t-s,s) \, ds
 \]
-
-\section{Soluzione per gas di fissione}
+\subsection{Soluzione per diffusione sferica}
 \[
 \begin{cases}
   \pderiv{u}{t} = D \frac{1}{r^2}\pderiv{}{r}( r^2 \pderiv{u}{r} ) + y\dot{F}  \quad & r \in (0, R), t > 0 \\
@@ -137,14 +148,19 @@ Infine, integrando si ottiene la soluzione del problema non omogeneo
   u(r,t) = \frac{2y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\frac{\sin(k_nr)}{r}\left(1 - e^{-Dk_n^2t}\right)\quad [\text{atomi}/m^3]
 \]
 
-Per trovare il numero di atomi ritenuti nel grano si integra la concentrazione su tutto il volume
+Per trovare il numero di atomi ritenuti nel grano si integra la concentrazione nel suo volume
 \[
-  N_R(t) = \int_V u(r,t) dV = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\pi y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
+  g(t) = \int_V u(r,t) dV = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\pi y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
 \]
 esplicitando \(k_n\) nel risultato si ottiene
 \[
-  N_R(t) = \frac{8y\dot{F}R^5}{\pi^3D}\sum_{n=1}^\infty \frac{1 - e^{-D\left( n\pi/R \right)^2t}} {n^4}
+  g(t) = \frac{8y\dot{F}R^5}{\pi^3D}\sum_{n=1}^\infty \frac{1 - e^{-D\left( n\pi/R \right)^2t}} {n^4} \approx \frac{8y\dot{F}R^5}{\pi^3D}\left(1 - e^{-D\left( \pi/R \right)^2t} \right)
 \]
 
+\section{Rilascio}
+Il numero di atomi rilasciati da un grano sono
+\[
+  \nu(t) = p(t) - g(t) = y\dot{F}\left[ t - \frac{8yR^5}{\pi^3D}(1 - e^{-D\left( \pi/R \right)^2t})\right]
+\]
 \end{document}
 
