@@ -38,26 +38,30 @@
 \pretitle{\begin{center}\LARGE}
 \posttitle{\par\end{center}\vskip 0.5em}
 
-\title{Gas di fissione}
-\author{Capitano A. B.}
+\title{Irradiation effects}
+\author{A. B.}
 \date{\today}
 
 \begin{document}
 
 \maketitle
 
-\section{Produzione}
+\section{Fission gas release}
+
+\section{Production}
+The production rate of gas atoms with fission yield $y$ is given by
 \[
-  \deriv{p}{t} = y\dot{F}
+  \deriv{p}{t} = y\dot{F}V
 \]
+where $\dot{F}$ is the fission rate and $V$ is the volume of the grain. Integrating we obtain
 \[
-  p(t) = y\dot{F}t
+  p(t) = y\dot{F}tV \quad \text{[atoms]}
 \]
 
-\section{Ritenzione nel grano}
+\section{Retention in the grain}
 
-\subsection{Metodo di Duhamel}
-Sia \(u(r,t)\) la soluzione del problema di diffusione
+\subsection{Duhamel method}
+Let $u(r,t)$ be the solution of the diffusion problem
 $$\[
   \begin{cases}
     \pderiv{u}{t} = D \nabla^2 u + f(r,t)  \quad & r \in (0, R), t > 0 \\
@@ -66,7 +70,7 @@ $$\[
   \end{cases}
 \]
 
-e \(w(r,t,s)\) famiglia di soluzioni con \(s \in [0,t]\) del problema omogeneo associato
+and \(w(r,t,s)\) family of solutions with \(s \in [0,t]\) of the homogeneous problem
 \[
   \begin{cases}
     \pderiv{w}{t} = D \nabla^2 w  \quad & r \in (0, R), t > 0 \\
@@ -75,11 +79,12 @@ e \(w(r,t,s)\) famiglia di soluzioni con \(s \in [0,t]\) del problema omogeneo a
   \end{cases} 
 \]
 
-secondo il metodo di Duhamel la soluzione del problema non omogeneo è data da
+the solution of the non-homogeneous problem is given by the Duhamel formula
 \[
   u(r,t) = \int_0^t w(r,t-s,s) \, ds
 \]
-\subsection{Soluzione per diffusione sferica}
+\subsection{Solution for spherical grain}
+The diffusion problem for a spherical grain is
 \[
 \begin{cases}
   \pderiv{u}{t} = D \frac{1}{r^2}\pderiv{}{r}( r^2 \pderiv{u}{r} ) + y\dot{F}  \quad & r \in (0, R), t > 0 \\
@@ -89,7 +94,7 @@ secondo il metodo di Duhamel la soluzione del problema non omogeneo è data da
 \end{cases}
 \]
 
-dove \( u(r,t) \; [\text{atomi}/m^3]\) concentrazione di gas di prodotti dal rateo di fissione \(y\dot{F}\) e ritenuti in un grano di raggio R. Il problema omogeneo associato è
+where $u(r,t)$ is the concentration of gas atoms in the grain. The homogeneous problem is 
 \[
 \begin{cases}
   \pderiv{w}{t} = D \frac{1}{r^2}\pderiv{}{r}( r^2 \pderiv{w}{r} )  \quad & r \in (0, R), t > 0 \\
@@ -99,35 +104,35 @@ dove \( u(r,t) \; [\text{atomi}/m^3]\) concentrazione di gas di prodotti dal rat
   \end{cases}
 \]
 
-applicando una separazione di variabili \(w(r,t,s) = \theta(t,s)\phi(r)\)
+apply the separation of variables $w(r,t,s) = \theta(t,s)\phi(r)$
 \[
   \frac{1}{D\theta}\pderiv{\theta}{t} = \frac{1}{r^2\phi}\pderiv{}{r}( r^2 \pderiv{\phi}{r} ) = -k^2
 \]
 
-la soluzione della parte temporale è
+the time part is
 \[
   \theta(t,s) = Ce^{-Dk^2t}
 \]
 
-espandendo la parte spaziale si ottiene
+while expanding the radial part
 \begin{align*}
   \pderiv[2]{\phi}{r} + \frac{2}{r}\pderiv{\phi}{r} + k^2\phi = 0\\
   r\pderiv[2]{\phi}{r} + 2\pderiv{\phi}{r} + k^2r\phi = 0\\
   \pderiv[2]{}{r}(r\phi) + k^2r\phi = 0
 \end{align*}
-la cui soluzione è
+whose solution is
 \[
   \phi(r) = A\frac{\sin(kr)}{r} + B\frac{\cos(kr)}{r}
 \]
-applicando la condizione di Neumann omogenea in \(r = 0\) si ha \(B = 0\), mentre la condizione di Dirichlet in \(r = R\) impone
+applying the simmetry condition in $r = 0$ we have $B = 0$, while the boundary condition in $r = R$ gives
 \[
   \sin(kR) = 0 \quad\Rightarrow\quad k_n = n\frac{\pi}{R}
 \]
-quindi la soluzione del problema omogeneo sarà della forma
+therefore the solution of the homogeneous problem will be in the form
 \[
   w(r,t,s) = \sum_{n=1}^{\infty} b_n \frac{\sin(k_nr)}{r}e^{-Dk_n^2t}
 \]
-applicando ora la condizione iniziale si trovano i coefficienti di Fourier \(b_n\)
+applying the initial condition we can find the Fourier coefficients $b_n$
 \[
   y\dot{F}r = \sum_{n=1}^{\infty} b_n \sin(k_nr)
 \]
@@ -135,12 +140,12 @@ applicando ora la condizione iniziale si trovano i coefficienti di Fourier \(b_n
   b_n = \frac{2y\dot{F}}{R}\underbrace{\int_0^R r\sin(k_nr)}_{R(-1)^{n+1} / k_n} \, dr = 2y\dot{F}\frac{(-1)^{n+1}}{k_n}
 \]
 
-si ha quindi la soluzione del problema omogeneo
+the solution of the homogeneous problem is
 \[
   w(r,t,s) = 2y\dot{F}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}e^{-Dk_n^2t} \quad [\text{atomi}/m^3s]
 \]
 
-Infine, integrando si ottiene la soluzione del problema non omogeneo
+Finally, integrating we obtain the solution of the non-homogeneous problem
 \[
   u(r,t) = \int_0^t w(r,t-s,s) \, ds = 2y\dot{F}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n}\frac{\sin(k_nr)}{r}\int_0^t e^{-Dk_n^2(t-s)} \, ds
 \]
@@ -148,19 +153,19 @@ Infine, integrando si ottiene la soluzione del problema non omogeneo
   u(r,t) = \frac{2y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\frac{\sin(k_nr)}{r}\left(1 - e^{-Dk_n^2t}\right)\quad [\text{atomi}/m^3]
 \]
 
-Per trovare il numero di atomi ritenuti nel grano si integra la concentrazione nel suo volume
+To find the total number of atoms retained in the grain we integrate over the volume
 \[
   g(t) = \int_V u(r,t) dV = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\pi y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
 \]
-esplicitando \(k_n\) nel risultato si ottiene
+
 \[
   g(t) = \frac{8y\dot{F}R^5}{\pi^3D}\sum_{n=1}^\infty \frac{1 - e^{-D\left( n\pi/R \right)^2t}} {n^4} \approx \frac{8y\dot{F}R^5}{\pi^3D}\left(1 - e^{-D\left( \pi/R \right)^2t} \right)
 \]
 
-\section{Rilascio}
-Il numero di atomi rilasciati da un grano sono
+\section{Release in the plenum}
+The number of atoms released in the plenum by a single grain is given by
 \[
-  \nu(t) = p(t) - g(t) = y\dot{F}\left[ t - \frac{8yR^5}{\pi^3D}(1 - e^{-D\left( \pi/R \right)^2t})\right]
+  R_g(t) = p(t) - g(t) = y\dot{F}\left[ t - \frac{8yR^5}{\pi^3D}(1 - e^{-D\left( \pi/R \right)^2t})\right]
 \]
 \end{document}
 
