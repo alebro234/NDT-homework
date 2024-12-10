@@ -49,9 +49,9 @@ We consider fixed channel geometry. Coolant passage area [m$^2$]:
   A_p = \frac{\sqrt{3}}{2}p^2 - 0.5\pi R_{co}^2
 \]
 where $p$ pitch, $R_{co}$ cladding outer radius.
-Coolant axial temperature profile by solving
+Coolant axial temperature profile by solving (f = 1/2 channel factor)
 \[ 
-  \pderiv{T_c}{z} = \frac{q'(z)}{\rhoG c_p(T_c) }
+  \pderiv{T_c}{z} = f\frac{q'(z)}{\rhoG c_p(T_c) }
 \]
 Convective HTC [W/m$^2$K]
 \begin{align*}
@@ -62,7 +62,7 @@ Convective HTC [W/m$^2$K]
 
 Cladding inner and outer temperature axial profiles with electrical analogy
 \begin{align*}
-  & T_{cl,o}(z) = T_{cool}(z) + \frac{q'(z)}{2\pi R_{co}h(z)}\\
+  & T_{cl,o}(z) = T_{cool}(z) + f\frac{q'(z)}{2\pi R_{co}h(z)}\\
   & T_{cl,i}(z) = T_{cl,o}(z) + \frac{q'(z)}{2\pi k_{cl}H_a}\ln\left(\frac{R_{co}}{R_{ci}}\right)
 \end{align*}
 where $k_{cl} = k_{cl}[0.5(T_{cl,i} + T_{cl,o})]$. To get the fuel outer temperature along z, we apply again the electrical analogy across the gap
@@ -87,7 +87,7 @@ The values of the properties \(y_{Pu}, x, p, \beta\), if not constant, can be av
 \subsection{Plutonium redistribution}
 The Pu radial redistribution is given by the empirical formula
 \[
-  \frac{c(r)}{c_0} = \frac{y(r)}{y_0} = 1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right]
+  \frac{q'(r)}{q'_0} = \frac{y(r)}{y_0} = 1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right]
 \]
 where $D$ = 0.01, $\alpha = 10$ and  $r^*$ is chosen to conserve the Pu mass. Considering a pellet with central void of radius \(R_0\) the initial uniform fraction is given by
 \[
