@@ -17,3 +17,5 @@ plt.plot(r*1000, y_Pu)
 plt.xlabel("r [mm]")
 plt.ylabel("y_Pu")
 plt.show()
+
+
