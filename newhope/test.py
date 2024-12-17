@@ -4,47 +4,31 @@ from scipy.integrate import quad
 from scipy.optimize import fsolve
 import functions as fn
 
-
-# test integrali
-
-Ti = 1800
-To = 1600
-
-y_Pu  = 0.2
-Bu = 0
-x = 0.03
-p = 0.5
-
-k_int_an = fn.tc_integral(Ti, To, x, y_Pu, p, Bu)
-k_int_sc = quad(fn.tc, To, Ti, args=(x, y_Pu, p, Bu))[0]
-
-print("\nThermal conductivity integral")
-print("Analytical: ", k_int_an)
-print("Scipy: ", k_int_sc)
-
-print("\nPlutonium redistribution")
-R = 2.71e-3
-R0 = 0
+# number of axial nodes
+nz = 100
+# number of radial nodes in the fuel
+nr = 100
 Ha = 0.85
-V = np.pi*(R**2 - R0**2)*Ha
-wt_Pu = 0.29
-y0 = wt_Pu / V
-D = 0.01
-alpha = 10
 
-print("r_star computation")
-r, y_Pu_an, r_star_an = fn.radial_y_Pu(wt_Pu, R, R0)
-print("Analytical: ", r_star_an)
+t_gap = 0.16e-3 * np.ones(nz)
+Rf = 5.42e-3/2 * np.ones(nz)
+Rci = Rf + t_gap
+Rco = 6.55e-3/2 * np.ones(nz)
 
-y_Pu_sc = lambda r_star: y0 + y0*D*( np.exp(-2*alpha*(r-r_star)/R) - 2*np.exp(-alpha*(r-r_star)/R) )
-def g(r_star):
-    return np.trapz(r*y_Pu_sc(r_star), r) - y0*(R**2 - R0**2)/2
+# axial linear power evaluation
+q_0 = 38.7e3  # W m^-1
+c = np.array([0.572, 0.737, 0.868, 0.958, 1, 0.983, 0.912, 0.802, 0.658, 0.49])
+# # max power @ z = 0
+# q0 = q_avg*10 / c.sum()
+z_fit = np.array([42.5, 127.5, 212.5, 297.5, 382.5, 467.5,552.5, 637.5, 722.5, 807.5])*0.001 - Ha/2 # m
+q_fit = q_0 * c
+polyn = np.poly1d(np.polyfit(z_fit, q_fit, q_fit.size-1))
+z = np.linspace(-Ha/2, +Ha/2, nz)
+def q_lin(z): return polyn(z)  # q = q(z) [W m^-1]
 
-r_star_sc = fsolve(g, 0.01)[0]
-print("Scipy: ", r_star_sc)
+r0 = 0
+chi, I = fn.radial_redstr(Rf, r0)
 
-
-plt.plot(r, y_Pu_an, label="Analytical")
-plt.plot(r, y_Pu_sc(r_star_sc), label="Scipy")
-plt.legend()
+r = np.linspace(r0, Rf, 100)
+plt.plot(r, chi(r))
 plt.show()

@@ -43,6 +43,44 @@
 \begin{document}
 \maketitle
 
+\section{Math used}
+\subsection{Moment of radial redistribition}
+Let \(\chi(r)\) be the radial redistribution function
+\[
+  \chi(r) = 1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right]
+\]
+The integral function of the first radial moment is
+\begin{align*}
+  I(r) &= \int r\chi(r)dr \\
+       &= \frac{r^2}{2}  - \frac{RD}{2\alpha}re^{-2\alpha(r - r^*)/R} - \frac{R^2D}{4\alpha^2}e^{-2\alpha(r - r^*)/R} + 2\frac{RD}{\alpha}re^{-\alpha(r - r^*)/R} + 2\frac{R^2D}{\alpha^2}e^{-\alpha(r - r^*)/R} + C
+\end{align*}
+Therefore for the fundamental theorem 
+\[
+  \int_{r_0}^R r\chi(r)dr = I(R) - I(r_0)
+\]
+\subsection{Duhamel method}
+Let $u(r,t)$ be the solution of the diffusion problem
+$$\[
+  \begin{cases}
+    \pderiv{u}{t} = D \nabla^2 u + f(r,t)  \quad & r \in (0, R), t > 0 \\
+    u(r,0) = 0 \quad & r \in [0, R], t = 0 \\
+    + BC
+  \end{cases}
+\]
+
+and \(w(r,t,s)\) family of solutions with \(s \in [0,t]\) of the homogeneous problem
+\[
+  \begin{cases}
+    \pderiv{w}{t} = D \nabla^2 w  \quad & r \in (0, R), t > 0 \\
+    w(r,0,s) = f(r,s) \quad & r \in [0, R], t = 0 \\
+    + BC
+  \end{cases} 
+\]
+
+the solution of the non-homogeneous problem is given by the Duhamel formula
+\[
+  u(r,t) = \int_0^t w(r,t-s,s) \, ds
+\]
 \section{Thermal analysis up to fuel outer radius}
 We consider fixed channel geometry. Coolant passage area [m$^2$]:
 \[
@@ -86,8 +124,11 @@ The values of the properties \(y_{Pu}, x, p, \beta\), if not constant, can be av
 
 \subsection{Plutonium redistribution}
 The Pu radial redistribution is given by the empirical formula
+\begin{equation}
+  \chi(r) = \frac{y(r)}{y_0} =  1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right] 
+  \label{eq:radial_red}
+\end{equation}
 \[
-  \frac{q'(r)}{q'_0} = \frac{y(r)}{y_0} = 1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right]
 \]
 where $D$ = 0.01, $\alpha = 10$ and  $r^*$ is chosen to conserve the Pu mass. Considering a pellet with central void of radius \(R_0\) the initial uniform fraction is given by
 \[
@@ -95,40 +136,56 @@ where $D$ = 0.01, $\alpha = 10$ and  $r^*$ is chosen to conserve the Pu mass. Co
 \]
 The mass balance imposes
 \[
-  \int_V y(r) dV = y_0V \quad \Rightarrow \quad 2\pi H\int_{R_0}^R r y(r)dr = y_0V
+  \int_V y(r) dV = y_0V \quad \Rightarrow \quad 2\pi H\int_{r_0}^R r \chi(r)dr = V
 \]
 Let \(\xi = r/R\), \(d\xi = Rdr\), therefore
 \[
-  y_0V + 2\pi R^2Hy_0D\;e^{2\alpha\xi^*}\int_{\xi_0}^1 \xi e^{-2\alpha\xi}d\xi - 4\pi R^2Hy_0D\;e^{\alpha\xi^*}\int_{\xi_0}^1 \xi e^{-\alpha\xi}d\xi = y_0V
+  V + 2\pi R^2HD\;e^{2\alpha\xi^*}\int_{\xi_0}^1 \xi e^{-2\alpha\xi}d\xi - 4\pi R^2HD\;e^{\alpha\xi^*}\int_{\xi_0}^1 \xi e^{-\alpha\xi}d\xi = V
+\]
+\[
+  e^{2\alpha\xi^*}\int_{\xi_0}^1 \xi e^{-2\alpha\xi}d\xi - 2e^{\alpha\xi^*}\int_{\xi_0}^1 \xi e^{-\alpha\xi}d\xi = 0
 \]
 Defining the integral
 \[
-  I_n = \int_{\xi_0}^1 \xi e^{-n\xi}d\xi = \frac{1}{n\alpha}\left( \xi_0e^{-n\alpha\xi_0} - e^{-n\alpha} \right) + \frac{1}{n^2\alpha^2}\left(e^{-n\alpha\xi_0} - e^{-n\alpha} \right)
+  J_n = \int_{\xi_0}^1 \xi e^{-n\xi}d\xi = \frac{1}{n\alpha}\left( \xi_0e^{-n\alpha\xi_0} - e^{-n\alpha} \right) + \frac{1}{n^2\alpha^2}\left(e^{-n\alpha\xi_0} - e^{-n\alpha} \right)
 \]
 
 We obtain an algebraic equation for \(\xi^*\)
 \begin{align*}
-  & I_2e^{2\alpha\xi^*} - 2I_1e^{\alpha\xi^*} = 0\\
-  & e^{\alpha\xi^*} = \frac{2I_1}{I_2}  \quad \Rightarrow \quad \xi^* = \frac{1}{\alpha}\ln\left(\frac{2I_1}{I_2}\right) \quad \Rightarrow \quad r^* = \frac{R}{\alpha}\ln\left(\frac{2I_1}{I_2}\right)
+  & J_2e^{2\alpha\xi^*} - 2J_1e^{\alpha\xi^*} = 0\\
+  & e^{\alpha\xi^*} = \frac{2J_1}{J_2}  \quad \Rightarrow \quad \xi^* = \frac{1}{\alpha}\ln\left(\frac{2J_1}{J_2}\right) \quad \Rightarrow \quad r^* = \frac{R}{\alpha}\ln\left(\frac{2J_1}{J_2}\right)
 \end{align*}
 
-To compute the average value of \(y(r)\) in the interval \([r_1, r_2]\) we use
+The power density is considered to be proportional to the Pu fraction
 \[
-  \bar{y} = \frac{1}{r_2-r_1}\int_{r_1}^{r_2} y(r)dr
+  q'''(r,z) = q'''_0\, \chi  = \frac{ q'_0(z) }{\Omega}\chi(r)
 \]
 
-\subsection{Non restructured fuel}
-The fuel temperature profile is obtained by solving numerically the heat conduction equation
-\begin{align*}
-  & \frac{1}{r}\pderiv{}{r}\left(r k \pderiv{T}{r}\right) = -\frac{q'}{\pi R^2}\\
-  & \deriv{T}{r} = -\frac{q'}{2\pi R k}r
-\end{align*}
+\subsection{Fuel temperature profile}
+The fuel temperature profile is obtained by solving numerically the heat conduction equation at each axial node
+\[
+   \frac{1}{r}\pderiv{}{r}\left(r k \pderiv{T}{r}\right) = -q'''\\
+\]
+\[
+  rk\pderiv{T}{r} = -q'''_0(z)\int r\chi(r)dr = -q'''_0(z)I(r) + C(z)
+\]
 The boundary conditions are
 \[
   \begin{cases}
-    T(R) = T_{f,o} \\
-    \deriv{T}{r}(0) = 0
+    T(R) = T_{fo} \\
+    \pderiv{T}{r}(r_0) = 0
   \end{cases}
+\]
+
+Applying the no flux condition at the center we obtain
+\[
+  C(z) = q'''_0(z)I(r_0)
+\]
+We now have an initual value problem which can be solved numerically at each axial node
+\begin{equation}
+  \pderiv{T}{r} = -q'''_0(z)\frac{I(r)}{r\,k(T)} + \frac{C(z)}{r\,k(T)}
+  \label{eq:IVP_fuel_T}
+\end{equation}
 
 \subsection{Restructured fuel}
 In restructured fuel we can subdivide in 3 regions
@@ -140,40 +197,51 @@ In restructured fuel we can subdivide in 3 regions
 
 Porosity of each region is given by
 \[
-  p_i = 1 - \frac{\rho_i}{\rho_s}
+  p_i = 1 - \frac{\rho_i}{TD}
 \]
-In region 1 and 2 the linear power densities change due to densification and Pu redistribition
+% In region 1 and 2 the linear power densities change due to densification and Pu redistribition
+% \[
+%   q'_i = q'_3\frac{\rho_i}{\rho_3}\frac{\bar{y}_i}{y_{i0}} \quad i = 1,2 \quad \text{(2 probably Pu negligible)}
+% \]
+
+The unknowns of the problem are the radii \(r_0, r_1, r_2\) and the temperature \(T_0\). By choosing a guess radius \(r_0\) we can compute the Pu and power redistribition. The power density is given by
 \[
-  q'_i = q'_3\frac{\rho_i}{\rho_3}\frac{\bar{y}_i}{y_{i0}} \quad i = 1,2 \quad \text{(2 probably Pu negligible)}
+  q'''(r,z) = \frac{q'''_0(z)\chi(r)}{\Omega} = \frac{q'_0(z)\chi(r)}{\pi(R^2 - r_o^2)}
 \]
-Mass balance on the three regions gives
+
+We can solve the IVP defined by equation \ref{eq:IVP_fuel_T}, up until \(r_0\). By doing so owe find \(T_0\) and \(r_1\), \(r_2\), which are at the radial nodes where the temperature is respectively \(T_1\) and \(T_2\). A new value of \(r_0\) is given by the mass balance
 \begin{equation} 
   r_0^2 = \left(\frac{\rho_1 - \rho_2}{\rho_1}\right)r_1^2 - \left(\frac{\rho_2 - \rho_3}{\rho_1}\right)r_2^2
   \label{eq:mass_balance}
 \end{equation}
-While integrating the conduction equation in the three regions gives
-\begin{align}
-  & \int_{T_1}^{T_0}kdT = \frac{q'_1}{4\pi R^2}(r_1^2 - r_0^2) - C_1\log\left(\frac{r_1}{r_0}\right)\\ 
-  & \int_{T_2}^{T_1}kdT = \frac{q'_2}{4\pi R^2}(r_2^2 - r_1^2) - C_2\log\left(\frac{r_2}{r_1}\right)\\ 
-  & \int_{T_1}^{T_0}kdT = \frac{q'_1}{4\pi}\left(1 - \frac{r_2^2}{R^2}\right) - C_3\log\left(\frac{r_1}{r_0}\right)
-\end{align}
-where the constants \(C_i\) are evaluated by the boundary conditions.
-\[
-  \begin{cases}
-    & k_3\deriv{T}{r}(r_2) = k_2\deriv{T}{r}{r_2}\\
-    & k_2\deriv{T}{r}(r_1) = k_1\deriv{T}{r}{r_1}\\
-    & \deriv{T}{r}(r_0) = 0
-  \end{cases}
 
-Applying the boundary conditions we obtain
-\[
-  \begin{cases}
-  & C_1 = \frac{q'_1}{2\pi R^2}r_0^2\\
-  & C_2 = \frac{1}{2}\left[ q'_2r_1^2 + q'_1(r_0^2 - r_1^2) \right]\\
-  & C_3 = 0
-  \end{cases}
-\]
-Computing the conductivity integral as shown in section 2.1 equations (1) to (4) become a system of non-linear equations in \(r_0, r_1, r_2\) and \(T_0\), which can be solved numerically.
+Repeat until convergence.
+
+
+
+% While integrating the conduction equation in the three regions gives
+% \begin{align}
+%   & \int_{T_1}^{T_0}kdT = \frac{q'_1}{4\pi R^2}(r_1^2 - r_0^2) - C_1\log\left(\frac{r_1}{r_0}\right)\\ 
+%   & \int_{T_2}^{T_1}kdT = \frac{q'_2}{4\pi R^2}(r_2^2 - r_1^2) - C_2\log\left(\frac{r_2}{r_1}\right)\\ 
+%   & \int_{T_1}^{T_0}kdT = \frac{q'_1}{4\pi}\left(1 - \frac{r_2^2}{R^2}\right) - C_3\log\left(\frac{r_1}{r_0}\right)
+% \end{align}
+% where the constants \(C_i\) are evaluated by the boundary conditions.
+% \[
+%   \begin{cases}
+%     & k_3\deriv{T}{r}(r_2) = k_2\deriv{T}{r}{r_2}\\
+%     & k_2\deriv{T}{r}(r_1) = k_1\deriv{T}{r}{r_1}\\
+%     & \deriv{T}{r}(r_0) = 0
+%   \end{cases}
+%
+% Applying the boundary conditions we obtain
+% \[
+%   \begin{cases}
+%   & C_1 = \frac{q'_1}{2\pi R^2}r_0^2\\
+%   & C_2 = \frac{1}{2}\left[ q'_2r_1^2 + q'_1(r_0^2 - r_1^2) \right]\\
+%   & C_3 = 0
+%   \end{cases}
+% \]
+% Computing the conductivity integral as shown in section 2.1 equations (1) to (4) become a system of non-linear equations in \(r_0, r_1, r_2\) and \(T_0\), which can be solved numerically.
 
 
 \section{Fission gas release}
@@ -190,30 +258,6 @@ where $\dot{F}$ is the fission rate and $V_g$ is the volume of the grain. Integr
 
 \subsection{Retention in the grain}
 
-\subsubsection{Duhamel method}
-Let $u(r,t)$ be the solution of the diffusion problem
-$$\[
-  \begin{cases}
-    \pderiv{u}{t} = D \nabla^2 u + f(r,t)  \quad & r \in (0, R), t > 0 \\
-    u(r,0) = 0 \quad & r \in [0, R], t = 0 \\
-    + BC
-  \end{cases}
-\]
-
-and \(w(r,t,s)\) family of solutions with \(s \in [0,t]\) of the homogeneous problem
-\[
-  \begin{cases}
-    \pderiv{w}{t} = D \nabla^2 w  \quad & r \in (0, R), t > 0 \\
-    w(r,0,s) = f(r,s) \quad & r \in [0, R], t = 0 \\
-    + BC
-  \end{cases} 
-\]
-
-the solution of the non-homogeneous problem is given by the Duhamel formula
-\[
-  u(r,t) = \int_0^t w(r,t-s,s) \, ds
-\]
-\subsubsection{Solution for spherical grain}
 The diffusion problem for a spherical grain is
 \[
 \begin{cases}
@@ -285,7 +329,7 @@ Finally, integrating we obtain the solution of the non-homogeneous problem
 
 To find the total number of atoms retained in the grain we integrate over the volume
 \[
-  g(t) = \int_V_g u(r,t) dV_g = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\pi y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
+  g(t) = \int_{V_g} u(r,t) dV_g = 4\pi\int_0^R r^2 u(r,t) \, dr = \frac{8\pi y\dot{F}}{D}\sum_{n=1}^{\infty} \frac{(-1)^{n+1}}{k_n^3}\left(1 - e^{-Dk_n^2t}\right)\int_0^R r\sin(k_nr) \, dr
 \]
 
 \[

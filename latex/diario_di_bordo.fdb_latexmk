@@ -1,8 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1733825945.00368 "diario_di_bordo.tex" "diario_di_bordo.pdf" "diario_di_bordo" 1733825945.65551 2
+["pdflatex"] 1734254177.15388 "diario_di_bordo.tex" "diario_di_bordo.pdf" "diario_di_bordo" 1734254177.7968 2
   "/etc/texmf/web2c/texmf.cnf" 1720715720.39582 475 c0e671620eb5563b2130f56340a5fde8 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
-  "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1000.tfm" 1136768653 3584 2d666ecf6d466d8b007246bc2f94d9da ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1200.tfm" 1136768653 3584 402da0b29eafbad07963b1224b222f18 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecbx1440.tfm" 1136768653 3584 13049b61b922a28b158a38aeff75ee9b ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/ecrm0500.tfm" 1136768653 3584 178baad7ffca7f5d3428a83bd7cc64c3 ""
@@ -109,7 +108,6 @@
   "/usr/share/texlive/texmf-dist/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-t1.enc" 1636152094 2971 def0b6c1f0b107b3b936def894055589 ""
   "/usr/share/texmf/fonts/enc/dvips/cm-super/cm-super-ts1.enc" 1636152094 2900 1537cc8184ad1792082cd229ecc269f4 ""
-  "/usr/share/texmf/fonts/type1/public/cm-super/sfbx1000.pfb" 1636152094 145408 43d44302ca7d82d487f511f83e309505 ""
   "/usr/share/texmf/fonts/type1/public/cm-super/sfbx1200.pfb" 1730812174.95273 140176 d4962f948b4cc0adf4d3dde77a128c95 ""
   "/usr/share/texmf/fonts/type1/public/cm-super/sfbx1440.pfb" 1730812174.95373 135942 859a90cad7494a1e79c94baf546d7de5 ""
   "/usr/share/texmf/fonts/type1/public/cm-super/sfrm1000.pfb" 1636152094 138258 6525c253f16cededa14c7fd0da7f67b2 ""
@@ -118,9 +116,9 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1730812188.02361 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1730812281 8212363 853872add298e3bb0254c4038e262075 ""
-  "diario_di_bordo.aux" 1733825945.53951 1855 4119e0bdedfd5d64405d3d72dc68f53d "pdflatex"
-  "diario_di_bordo.out" 1733825945.54051 2091 5ee0a184435a3a7c001d0b98422c9114 "pdflatex"
-  "diario_di_bordo.tex" 1733825943.7874 10856 b969a4bc0793256bbf472a70f4141581 ""
+  "diario_di_bordo.aux" 1734254177.70303 2097 61eb4b9703d916b105b34af02fe171bc "pdflatex"
+  "diario_di_bordo.out" 1734254177.70303 2193 5da19bf98d3f107175b1605c3090bba6 "pdflatex"
+  "diario_di_bordo.tex" 1734254175.475 12522 2d1077952fbd9c18e6c31494f109414b ""
   (generated)
   "diario_di_bordo.aux"
   "diario_di_bordo.log"

@@ -2,6 +2,7 @@ import numpy as np
 from scipy.integrate._ivp.radau import T
 from scipy.optimize import fsolve
 from scipy.integrate import solve_ivp
+import matplotlib.pyplot as plt
 
 def tc_fuel(T, x, y_Pu, p, Bu):
     # fuel thermal conductivity [W m^-1 K^-1]
@@ -31,7 +32,7 @@ def tc_fuel_integral(Ti, To, x, y_Pu, p, Bu):
     # p: porosity [-]
     # Bu: burnup [GWd/tHM]
     Ti, To = max(Ti, To), min(Ti, To)
-    Ti = Ti + 273.15  # K
+    Ti = Ti + 273.15  #  K
     To = To + 273.15  # K
     A = 0.01926 + 1.06e-6 * x + 2.63e-8 * y_Pu
     B = 2.39e-4 + 1.37e-13 * y_Pu
@@ -45,47 +46,29 @@ def tc_fuel_integral(Ti, To, x, y_Pu, p, Bu):
     return k_int
 
 
-def K_fuel_Trz(y_Pu, x, p, BU):
-    # builds lambda function k = k(T,r,z)
-    # y_Pu(r): radial Pu fraction
-    # x: deviation from O/M stoichiometry
-    # p: porosity of region
-    # BU(r,z): local burnup [GWd tHM^-1]
-
-    K = lambda T,r,z: tc_fuel(T, x, y_Pu(r), p, BU(r,z))
-    return K
-    
-
-def Pu_redistribution(R, R0, r_star = None):
+def radial_redstr(R, r0):
     # total Pu weight percent [-]
     # R: fuel outer radius [m]
-    # R0: inner void radius [m]
+    # r0: inner void radius [m]
     # r_star: parameter from mass balance [m]
-    #
     
     D = 0.01
     alpha = 10
-    if r_star is None:
-        I1 = 1/(alpha) * ( (R0/R)*np.exp(-alpha*R0/R) - np.exp(-alpha) ) + 1/(alpha**2) * ( np.exp(-alpha*R0/R) - np.exp(-alpha) )
-        I2 = 1/(2*alpha) * ( (R0/R)*np.exp(-2*alpha*R0/R) - np.exp(-2*alpha) ) + 1/(4*alpha**2) * ( np.exp(-2*alpha*R0/R) - np.exp(-2*alpha) )
+    # y0 = 0.29
+    I1 = R**2/(alpha) * ( (r0/R)*np.exp(-alpha*r0/R) - np.exp(-alpha) ) + R**2/(alpha**2) * ( np.exp(-alpha*r0/R) - np.exp(-alpha) )
+    I2 = R**2/(2*alpha) * ( (r0/R)*np.exp(-2*alpha*r0/R) - np.exp(-2*alpha) ) + R**2/(4*alpha**2) * ( np.exp(-2*alpha*r0/R) - np.exp(-2*alpha) )
 
-        r_star = R * np.log(2*I1/I2)/alpha
-        y_Pu = lambda r: 1 + D*( np.exp(-2*alpha*(r-r_star)/R) - 2*np.exp(-alpha*(r-r_star)/R) )
+    r_star = R * np.log(2*I1/I2)/alpha
+    chi = lambda r: 1 + D*( np.exp(-2*alpha*(r-r_star)/R) - 2*np.exp(-alpha*(r-r_star)/R) )
+    I = lambda r: r**2/2 - D*R/(2*alpha) * r * np.exp(-2*alpha*(r - r_star)/R) - D*R**2/(4*alpha**2) * np.exp(-2*alpha*(r - r_star)/R) + 2*D*R/alpha * r * np.exp(-alpha*(r - r_star)/R) + 2*D*R**2/(alpha**2) * np.exp(-alpha*(r - r_star)/R)
 
-        # y_Pu = lambda r_star: y0 + y0*D*( np.exp(-2*alpha*(r-r_star)/R) - 2*np.exp(-alpha*(r-r_star)/R) )
-        # def fun(r_star):
-        #     return 2*np.pi*Ha*np.trapz(r*y_Pu(r_star), r) - wt_Pu
-        # r_star = fsolve(fun, R/2)[0]
-        # y_Pu = y_Pu(r_star)
-    else:
-        y_Pu = lambda r: 1 + D*( np.exp(-2*alpha*(r-r_star)/R) - 2*np.exp(-alpha*(r-r_star)/R) )
-    return y_Pu
+    return chi, I
 
-def burnup_density(q_vol, t_irr, Rf, R0):
+def burnup_density(q_vol, t_irr, Rf, r0):
     # q_vol(r,z): volumetric heat rate [W m^-3]
     # t_irr: irradiation time [d]
     rho_f = 11310 * 0.945  # fuel density [kg m^-3]
-    V_f = np.pi*(Rf**2 - R0**2) * 0.850
+    V_f = np.pi*(Rf**2 - r0**2) * 0.850
     bu = lambda r,z: 1e-6 * q_vol(r,z) * t_irr / (rho_f * V_f) # GWd tHm^-3 m^-3
     return bu
 
@@ -120,13 +103,32 @@ def tc_gap(T):
     T = T + 273.15  # K
     return 15.8e-4 * T**0.79
 
-def thermal_effects(q_lin, Rco, Rci, Rf, R0 = 0, nr = 100):
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def thermal_effects(q_lin, t_irr, Rco, Rci, Rf, r0 = [0], nr = 100):
     # q_lin(z): linear heat rate [W m^-1]
     # Rco: cladding outer radius [m]
     # Rci: cladding inner radius [m]
     # Rfo: fuel outer radius [m]
-    # R0: inner void radius [m]
+    # r0: inner void radius [m]
     # nr: number of radial points for fuel
+    # t_irr: irradiation time [d]
 
     # channel geometry
     f = 0.5
@@ -174,31 +176,43 @@ def thermal_effects(q_lin, Rco, Rci, Rf, R0 = 0, nr = 100):
 
     # fuel
 
+
     Rf_avg = np.mean(Rf)
-    R0_avg = np.mean(R0)
+    r0_avg = np.mean(r0)
+    R_fuel = np.linspace(r0_avg, Rf_avg, nr)
+    Omega = np.pi*(Rf_avg**2 - r0_avg**2)
+    V_fuel = Omega * Ha
+    # print("V_fuel: ", V_fuel*1e9, " mm^3")
+    rho_f = 11310 * 0.945  # fuel density [kg m^-3]
     # Pu redistribution
     y0 = 0.29
-    q_r = Pu_redistribution(Rf_avg, R0_avg)
-    # volumetric heat power gen [W m^-3]
-    q_vol = lambda r, z: q_lin(z) * q_r(r) / (np.pi*(Rf_avg**2 - R0_avg**2))
+    chi, I = radial_redstr(Rf_avg, r0_avg)
+    
+    # Total power of the rod
+    Q = 2*np.pi*np.trapz(q_lin(z),z)*np.trapz(R_fuel*chi(R_fuel), R_fuel) / (np.pi*(Rf_avg**2 - r0_avg**2))
+    # print("Q: ", Q, " W")
+
     # radial plutonium fraction
-    y_Pu = lambda r: y0 * q_r(r)
+    y_Pu = lambda r: y0 * chi(r)
 
-    bu = burnup_density(q_vol, 7, Rf_avg, R0_avg) # GWd tHM^-3 m^-3
-    dr = (Rf_avg - R0_avg) / nr
-    dz = z[1] - z[0]
-    # local burnup in cell (r, z)
-    BU = lambda r,z: 2*np.pi*r*bu(r,z)*dr*dz # Gwd tHM^-3
+    # volumetric axial power density
+    q0 = lambda z: q_lin(z) / Omega
 
-    if R0 == 0:
+    BU = 1e-6 * t_irr * Q / (V_fuel * rho_f)  # GWd tHM^-1
+    # print("BU: ", BU)
+
+    if all(r0) == 0:
         # as fabricated fuel
         T_f = np.zeros((nz, nr))
-        kf = K_fuel_Trz(y_Pu, 2 - 1.975, 1 - 0.945, BU)
+        kf = lambda T: tc_fuel(T, 2 - 1.945, 0.29, 1 - 0.945, BU)
+        # plt.plot(R_fuel, kf(2000, R_fuel))
+        # plt.show()
+        # print(tc_fuel(2000, 2-1.975, 0.29, 1 - 0.945, BU))
         for i in range(nz):
             r_fuel = np.linspace(Rf[i], 0, nr)
 
             def dTf_dr(r, T):
-                return -q_vol(r, z[i]) * r / (2 * kf(T, r, z[i]))
+                return - 0.5 * q0(z[i]) * r / kf(T)
 
             solution = solve_ivp(
                 dTf_dr, 
@@ -208,40 +222,122 @@ def thermal_effects(q_lin, Rco, Rci, Rf, R0 = 0, nr = 100):
             )
             T_f[i, :] = np.flip(solution.y[0])
         else:
-            # restructured fuel
+            pass
 
-            # restructuring radii
-            R1 = np.zeros(nz)
-            R2 = np.zeros(nz)
+    temps = {
+        "T_cool": T_cool,
+        "T_co": T_co,
+        "T_ci": T_ci,
+        "T_gap": T_gap,
+        "T_f": T_f
+    }
 
-            # densities and porosities 
-            TD = 11310  # fuel theoretical density [kg m^-3]
-            rho1 = 0.98 * TD
-            rho2 = 0.96 * TD
-            rho3 = 0.945 * TD # = rho_f
+    return temps
 
-            p1 = 1 - rho1 / TD
-            p2 = 1 - rho2 / TD
-            p3 = 1 - rho3 / TD
+def expand(q_lin, t_irr, Rco, Rci, Rf, R0, toll=1e-6, max_iter=50):
+    # Thermal expansion coefficients
+    eps_f = lambda T: 1.2e-5 * (T - 25)  # fuel thermal expansion
+    eps_cl = lambda T: -3.101e-4 + 1.545e-5 * T + 2.75e-9 * T**2  # clad thermal expansion
+    rho_cl = lambda T: 7900 * (1 + eps_cl(T))  # clad density
+    delta_V = lambda T: 1.5e-5 * np.exp(-0.25 * (T - 450)**2) * (6.1e-7 * t_irr * 24 * 3600)**2.75  # volumetric swelling
 
-            # integrate in region 3 up to T2 = 1600°C and find R2(z)
-            T2 = 1600
-            kf = K_fuel_Trz(y_Pu, 2 - 1.975, p3, BU)
+    Rco_prev = Rco
+    Rci_prev = Rci
+    Rf_prev = Rf
+    R0_prev = R0
+
+    temps = thermal_effects(q_lin, t_irr, Rco, Rci, Rf, R0)
+    Tco = temps["T_co"]
+    Tci = temps["T_ci"]
+    Tfo = temps["T_f"][:,-1]
+    Tfi = temps["T_f"][:,0]
+
+    print("\n=== Initial State ===")
+    print("Radii:")
+    print(f"Cladding Outer: {np.max(Rco)*1e3:.3f} mm")
+    print(f"Cladding Inner: {np.max(Rci)*1e3:.3f} mm")
+    print(f"Fuel Outer:     {np.max(Rf)*1e3:.3f} mm")
+    print(f"Fuel Inner:     {np.max(R0)*1e3:.3f} mm")
+    print("\nTemperatures:")
+    print(f"Coolant:        {np.max(temps['T_cool']):.1f} °C")
+    print(f"Cladding Outer: {np.max(Tco):.1f} °C")
+    print(f"Cladding Inner: {np.max(Tci):.1f} °C")
+    print(f"Gap:            {np.max(temps['T_gap']):.1f} °C")
+    print(f"Fuel Surface:   {np.max(Tfo):.1f} °C")
+    print(f"Fuel Center:    {np.max(Tfi):.1f} °C")
+
+    err = toll + 1
+    iter = 0
+    while err > toll and iter < max_iter:
+
+        Rco_new = Rco * (1 + eps_cl(Tco) + (1/3)*delta_V(Tco))
+        Rci_new = Rci * (1 + eps_cl(Tci) + (1/3)*delta_V(Tci))
+        Rf_new = Rf * (1 + eps_f(Tfo) +    (1/3)*delta_V(Tfo))
+        R0_new = R0 * (1 + eps_cl(Tfi) +   (1/3)*delta_V(Tfi))
+
+        err = [
+            np.max(Rco_new - Rco_prev),
+            np.max(Rci_new - Rci_prev),
+            np.max(Rf_new - Rf_prev),
+            np.max(R0_new - R0_prev)
+        ]
+        err = np.linalg.norm(err)
+
+        temps = thermal_effects(q_lin, t_irr, Rco_new, Rci_new, Rf_new, R0_new)
+        Tco = temps["T_co"]
+        Tci = temps["T_ci"]
+        Tfo = temps["T_f"][:,-1]
+        Tfi = temps["T_f"][:,0]
+
+        Rco_prev = Rco_new
+        Rci_prev = Rci_new
+        Rf_prev = Rf_new
+        R0_prev = R0_new
+
+        iter += 1
+
+    print(f"\n=== Final State (after {iter} iterations) ===")
+    print("Radii:")
+    print(f"Cladding Outer: {np.max(Rco_new)*1e3:.3f} mm")
+    print(f"Cladding Inner: {np.max(Rci_new)*1e3:.3f} mm")
+    print(f"Fuel Outer:     {np.max(Rf_new)*1e3:.3f} mm")
+    print(f"Fuel Inner:     {np.max(R0_new)*1e3:.3f} mm")
+    print("\nTemperatures:")
+    print(f"Coolant:        {np.max(temps['T_cool']):.1f} °C")
+    print(f"Cladding Outer: {np.max(Tco):.1f} °C")
+    print(f"Cladding Inner: {np.max(Tci):.1f} °C")
+    print(f"Gap:            {np.max(temps['T_gap']):.1f} °C")
+    print(f"Fuel Surface:   {np.max(Tfo):.1f} °C")
+    print(f"Fuel Center:    {np.max(Tfi):.1f} °C")
+    print("\nCladding Swelling (delta_V):")
+    print(f"Outer Surface:  {delta_V(np.max(Tco))*100:.5f} %")
+    print(f"Inner Surface:  {delta_V(np.max(Tci))*100:.5f} %")
+    return Rco_new, Rci_new, Rf_new, R0_new
 
 
-            # integrate in region 2 up to T1 = 1800°C and find R1(z)
-            T2 = 1600
-            kf = K_fuel_Trz(y_Pu, 2 - 1.975, p3, BU)
 
-            # R0 from mass balance
+def restructure(q0, chi, Rf, nz, nr):
+    # q0 [W m^-3] power density along z
+    # chi: radial redistribution function
+    # Rf: fuel outer radius
+    
+    # restructuring radii
+    r1 = np.zeros(nz)
+    r2 = np.zeros(nz)
 
-            # integrate in region 1 up to R0 and find T0(z)
+    # densities and porosities 
+    TD = 11310  # fuel theoretical density [kg m^-3]
+    rho1 = 0.98 * TD
+    rho2 = 0.96 * TD
+    rho3 = 0.945 * TD # = rho_f
 
+    p1 = 1 - rho1 / TD
+    p2 = 1 - rho2 / TD
+    p3 = 1 - rho3 / TD
 
+    for i in range(nz):
+        pass
 
-
-
-    return T_cool, T_co, T_ci, T_gap, T_f
 
 
 def plot_axial_T(T, r, r0, R, n_r, Ha):
