@@ -24,11 +24,18 @@ def FGR(H_p, rho_f, Flux, Tf_max, Tg_max, t_irr, R_fi, R_fo, t_gap, H_a, p_lim):
     # We define the effective Diffusion coefficient (D):
     Tf_max_K = Tf_max + 273.15 #[K]
     D = 5 * 1e-8 * np.exp(- 40262 / Tf_max_K)
+    DDD = 5 * 1e-8 * np.exp(- 40262 /1673)
+    print(f"Diffusion coefficient: {DDD}")
 
     # We have solved the time dependent diffusion equation for the fission gasses to obtain:
-    R_Fg = y_Fg * F * (t_irr - ((8 * y_Fg * (R_grain**5))/((np.pi**3) * D)) * (1 - np.exp(- (D * t_irr) * (np.pi / R_grain)**2)))
-    V_f = np.pi * (R_fo**2 - R_fi**2) * H_a
     V_grain = (4 * np.pi * R_grain**3) / 3
+    p = y_Fg * F * t_irr * V_grain
+    g = 8 * y_Fg * F * R_grain**5/(np.pi**3 * D) * (1 - np.exp(- (D * t_irr) * (np.pi / R_grain)**2))
+    print(f"Release fraction: {1 - g/p:.9f}")
+    print(f"g: {g:.9f}, p: {p:.9f}")
+    R_Fg = p - g
+    # R_Fg = y_Fg * F * (t_irr*V_grain - ((8 * y_Fg * (R_grain**5))/((np.pi**3) * D)) * (1 - np.exp(- (D * t_irr) * (np.pi / R_grain)**2)))
+    V_f = np.pi * (R_fo**2 - R_fi**2) * H_a
     R_tot = R_Fg * (V_f / V_grain) # total nuber of Fg atoms released in the plenum
 
     # Now we caluclate the plenum size to accomodate all Fg's:
