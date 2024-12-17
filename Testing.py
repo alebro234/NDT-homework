@@ -13,4 +13,5 @@ t_irr = 365 * 24 * 3600 #[s]
 print(f"Plenum pressure: {p:.5f} MPa")
 print(f"Fission gas moles: {n1:.5f}")
 print(f"Helium moles: {n2:.5f}")
+print(f"fission gas molar fraction: {y:.9f}")
 
