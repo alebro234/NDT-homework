@@ -13,6 +13,7 @@
 \usepackage{titling}
 \usepackage{braket}
 \usepackage{graphicx}
+\usepackage{cancel}
 \usepackage{multicol}
 \usepackage{lipsum}
 
@@ -49,10 +50,10 @@ Let \(\chi(r)\) be the radial redistribution function
 \[
   \chi(r) = 1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right]
 \]
-The integral function of the first radial moment is
+The first radial moment is given by
 \begin{align*}
   I(r) &= \int r\chi(r)dr \\
-       &= \frac{r^2}{2}  - \frac{RD}{2\alpha}re^{-2\alpha(r - r^*)/R} - \frac{R^2D}{4\alpha^2}e^{-2\alpha(r - r^*)/R} + 2\frac{RD}{\alpha}re^{-\alpha(r - r^*)/R} + 2\frac{R^2D}{\alpha^2}e^{-\alpha(r - r^*)/R} + C
+       &= \frac{r^2}{2}  - \frac{RD}{2\alpha}re^{-2\alpha(r - r^*)/R} - \frac{R^2D}{4\alpha^2}e^{-2\alpha(r - r^*)/R} + 2\frac{RD}{\alpha}re^{-\alpha(r - r^*)/R} + 2\frac{R^2D}{\alpha^2}e^{-\alpha(r - r^*)/R}
 \end{align*}
 Therefore for the fundamental theorem 
 \[
@@ -113,23 +114,20 @@ where $k_{gap} = k_{gap}[0.5(T_{cl,i} + T_{fo})]$.
 \subsection{Conductivity integral}
 The fuel thermal conductivity is given by the correlation 
 \begin{align*}
-  & k = k(T, y_{Pu}, x, p, \beta) =  1.755 + (k_0 - 1.755)e^{-\beta/128.75} \quad [W m^{-1} K^{-1}]\\
+  & k =  1.755 + (k_0 - 1.755)e^{-\beta/128.75} \quad [W m^{-1} K^{-1}]\\
   & k_0 = \left[\frac{1}{A + BT} + \frac{D}{T^2}e^{-E/T} \right](1 - p)^{2.5}
 \end{align*}
 Integrating in temeprature range \([T_o, T_i]\), which corresponds to radial range \([r_i,r_o]\) we obtain
 \[
   \int_{T_o}^{T_i} k dT = 1.755(T_i -  T_o)(1 - e^{-\beta/128.75}) + \left[ \frac{1}{B}\log\left(\frac{A + BT_i}{A + BT_o}\right) + \frac{D}{E}(e^{-E/T_i} - e^{-E/T_o})\right](1-p)^{2.5}e^{-\beta/128.75}
 \]
-The values of the properties \(y_{Pu}, x, p, \beta\), if not constant, can be averaged in \([r_i,r_o]\)
 
 \subsection{Plutonium redistribution}
 The Pu radial redistribution is given by the empirical formula
-\begin{equation}
-  \chi(r) = \frac{y(r)}{y_0} =  1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right] 
-  \label{eq:radial_red}
-\end{equation}
 \[
+  \chi(r) = \frac{y(r)}{y_0} =  1 + D\left[\ e^{-2\alpha(r - r^*)/R}  - 2e^{-\alpha(r-r^*)/R} \right] 
 \]
+
 where $D$ = 0.01, $\alpha = 10$ and  $r^*$ is chosen to conserve the Pu mass. Considering a pellet with central void of radius \(R_0\) the initial uniform fraction is given by
 \[
   y_0 = 0.29
@@ -158,34 +156,31 @@ We obtain an algebraic equation for \(\xi^*\)
 
 The power density is considered to be proportional to the Pu fraction
 \[
-  q'''(r,z) = q'''_0\, \chi  = \frac{ q'_0(z) }{\Omega}\chi(r)
+  q(r,z) = q_0\, \chi  = \frac{ q'_0(z) }{\Omega}\chi(r)
 \]
 
-\subsection{Fuel temperature profile}
-The fuel temperature profile is obtained by solving numerically the heat conduction equation at each axial node
-\[
-   \frac{1}{r}\pderiv{}{r}\left(r k \pderiv{T}{r}\right) = -q'''\\
-\]
-\[
-  rk\pderiv{T}{r} = -q'''_0(z)\int r\chi(r)dr = -q'''_0(z)I(r) + C(z)
-\]
-The boundary conditions are
-\[
+\subsection{As-fabricated fuel}
+The fuel temperature profile is obtained by solving the heat conduction equation at each axial node
+\begin{align*}
   \begin{cases}
+   \frac{1}{r}\pderiv{}{r}\left(r k \pderiv{T}{r}\right) = -q\\
     T(R) = T_{fo} \\
-    \pderiv{T}{r}(r_0) = 0
+    \pderiv{T}{r}(0) = 0
   \end{cases}
-\]
+\end{align*}
 
-Applying the no flux condition at the center we obtain
+Where the volumetric power density, neglecting radial redistribition, is given by
 \[
-  C(z) = q'''_0(z)I(r_0)
+  q(z) = \frac{q'_0(z)}{\Omega} = \frac{q'_0(z)}{\pi R^2}
 \]
-We now have an initual value problem which can be solved numerically at each axial node
-\begin{equation}
-  \pderiv{T}{r} = -q'''_0(z)\frac{I(r)}{r\,k(T)} + \frac{C(z)}{r\,k(T)}
-  \label{eq:IVP_fuel_T}
-\end{equation}
+Integrating once
+\[
+  k\pderiv{T}{r} = -\frac{q}{2}r + \frac{C}{r}
+\]
+where $C = 0$ for the symmetry condition. We have now a initial value problem, which is integrated numerically from R to 0
+\[
+  \pderiv{T}{r} = -\frac{q}{2k}r
+\]
 
 \subsection{Restructured fuel}
 In restructured fuel we can subdivide in 3 regions
@@ -199,50 +194,102 @@ Porosity of each region is given by
 \[
   p_i = 1 - \frac{\rho_i}{TD}
 \]
-% In region 1 and 2 the linear power densities change due to densification and Pu redistribition
-% \[
-%   q'_i = q'_3\frac{\rho_i}{\rho_3}\frac{\bar{y}_i}{y_{i0}} \quad i = 1,2 \quad \text{(2 probably Pu negligible)}
-% \]
 
-The unknowns of the problem are the radii \(r_0, r_1, r_2\) and the temperature \(T_0\). By choosing a guess radius \(r_0\) we can compute the Pu and power redistribition. The power density is given by
+By choosing a guess radius \(r_0\) for each axial node we can compute the Pu and power redistribition, and the fuel cross section
 \[
-  q'''(r,z) = \frac{q'''_0(z)\chi(r)}{\Omega} = \frac{q'_0(z)\chi(r)}{\pi(R^2 - r_o^2)}
+  \Omega = \pi(R^2 - r_0^2)
 \]
 
-We can solve the IVP defined by equation \ref{eq:IVP_fuel_T}, up until \(r_0\). By doing so owe find \(T_0\) and \(r_1\), \(r_2\), which are at the radial nodes where the temperature is respectively \(T_1\) and \(T_2\). A new value of \(r_0\) is given by the mass balance
-\begin{equation} 
-  r_0^2 = \left(\frac{\rho_1 - \rho_2}{\rho_1}\right)r_1^2 - \left(\frac{\rho_2 - \rho_3}{\rho_1}\right)r_2^2
-  \label{eq:mass_balance}
-\end{equation}
+Integrating the conduction equation from $r_0$ to a generic $r$ and applying the no flux condition at the void
+\begin{align*} 
+  \int_{r_0}^r \pderiv{}{r}\left(r k \pderiv{T}{r}\right) = -\int_{r_0}^r rq(r,z) dr = -q_0\int_{r_0}^r r\chi dr\\
+r k \pderiv{T}{r} - \cancel{r k \left.\pderiv{T}{r}\right|_{r_0}} = -q_0\left[I(r) - I(r_0)\right]
+\end{align*}
+where $I$ is the radial moment function, shown in section 1. We now have a initial value problem, which can be integrated numerically from R to $r_0$.
+\[
+  \pderiv{T}{r} = -\frac{q_0}{rk}\left[I(r) - I(r_0)\right]
+\]
+Since the power density changes due to densification in each region, it is defined as a piecewise function
+\[
+\[
+q_0(z) = 
+\begin{cases}
+    \frac{\rho_1}{\rho_3} \frac{q'_0(z)}{\Omega} & T > T_1 \\[0.5em]
+    \frac{\rho_2}{\rho_3} \frac{q'_0(z)}{\Omega} & T_1 > T > T_2 \\[0.5em]
+    \frac{q'_0(z)}{\Omega} & T_2 > T > T_{fo}
+\end{cases}
 
-Repeat until convergence.
+
+It was noticed that the thermal conductivity changes significantly only with temperature and porosity, therefore
+\[
+  k(T) = \begin{cases}
+    k(T, x, y_0, p_1, \beta) & T > T_1 \\[0.5em]
+    k(T, x, y_0, p_2, \beta) & T_1 > T > T_2 \\[0.5em]
+    k(T, x, y_0, p_3, \beta) & T_2 > T > T_{fo}
+  \end{cases}
+\]
+
+Having the temperature profile we can find $r_1$ and $r_2$, where the temperature is respectively $T_1$ and $T_2$. The new value of $r_0$ is given by the mass balance
+\[
+  r_0^2 = \left(\frac{\rho_1 - \rho_2}{\rho_1}\right)r_1^2 + \left(\frac{\rho_2 - \rho_3}{\rho_1}\right)r_2^2
+\]
+
+Iterate until convergence at each axial node.
 
 
 
-% While integrating the conduction equation in the three regions gives
-% \begin{align}
-%   & \int_{T_1}^{T_0}kdT = \frac{q'_1}{4\pi R^2}(r_1^2 - r_0^2) - C_1\log\left(\frac{r_1}{r_0}\right)\\ 
-%   & \int_{T_2}^{T_1}kdT = \frac{q'_2}{4\pi R^2}(r_2^2 - r_1^2) - C_2\log\left(\frac{r_2}{r_1}\right)\\ 
-%   & \int_{T_1}^{T_0}kdT = \frac{q'_1}{4\pi}\left(1 - \frac{r_2^2}{R^2}\right) - C_3\log\left(\frac{r_1}{r_0}\right)
-% \end{align}
-% where the constants \(C_i\) are evaluated by the boundary conditions.
+
+
+% By choosing a guess internal radius $r_0$ we can compute the radial redistribition function $\chi(r)$ and the volumetric power density 
+% \[
+%   q(r,z) = \frac{q'_0(z)}{\Omega}\chi(r) = \frac{q'_0(z)}{\pi(R^2 - r_o^2)}\chi(r)
+% \]
+% Where for the as-fabricated region
+% \[
+%   q_3 \approx \frac{q'_0(z)}{\Omega}
+% \]
+%
+% In region 2 the power density changes due to densification and in region 1 also due to Pu redistribition
+% \begin{align*} 
+%   q_2 &= q_3\frac{\rho_2}{\rho_3}\\
+%   q_1 &= q_3\frac{\rho_i}{\rho_3}\frac{\bar{y}_1}{y_{10}} = q_3\frac{\rho_1}{\rho_3}\bar{\chi}_{10}
+% \end{align*}
+% where 
+% \[
+%   \bar{\chi}_{10} = \frac{2\pi}{\Omega}\int_{r_0}^{r_1} r\, \chi(r) dr = \frac{2\pi}{\Omega}[I(r_1) - I(r_0)]
+% \]
+% The unknowns of the problem are the radii \(r_0, r_1, r_2\) and the temperature \(T_0\). 
+% Integrating the conduction equation in the three regions gives
+% \begin{align*}
+%   & \int_{T_1}^{T_0}kdT = \frac{1}{4}q_1(r_1^2 - r_0^2) - C_1\log\left(\frac{r_1}{r_0}\right)\\ 
+%   & \int_{T_2}^{T_1}kdT = \frac{1}{4}q_2(r_2^2 - r_1^2) - C_2\log\left(\frac{r_2}{r_1}\right)\\ 
+%   & \int_{T_f}^{T_2}kdT = \frac{1}{4}q_3\left(R^2 - r_2^2\right) - C_3\log\left(\frac{r_1}{r_0}\right)
+% \end{align*}
+% where the constants \(C_i\) are evaluated by the boundary conditions
 % \[
 %   \begin{cases}
 %     & k_3\deriv{T}{r}(r_2) = k_2\deriv{T}{r}{r_2}\\
 %     & k_2\deriv{T}{r}(r_1) = k_1\deriv{T}{r}{r_1}\\
 %     & \deriv{T}{r}(r_0) = 0
 %   \end{cases}
-%
-% Applying the boundary conditions we obtain
-% \[
+%   \quad\Rightarrow\quad 
 %   \begin{cases}
-%   & C_1 = \frac{q'_1}{2\pi R^2}r_0^2\\
-%   & C_2 = \frac{1}{2}\left[ q'_2r_1^2 + q'_1(r_0^2 - r_1^2) \right]\\
+%   & C_1 = \frac{1}{2}q_1r_0^2\\
+%   & C_2 = \frac{1}{2}\left[ q_2r_1^2 + q_1(r_0^2 - r_1^2) \right]\\
 %   & C_3 = 0
 %   \end{cases}
 % \]
-% Computing the conductivity integral as shown in section 2.1 equations (1) to (4) become a system of non-linear equations in \(r_0, r_1, r_2\) and \(T_0\), which can be solved numerically.
-
+% Therefore the equations become
+% \begin{align*}
+%   & \int_{T_1}^{T_0}kdT = \frac{1}{4}q_1(r_1^2 - r_0^2) - \frac{1}{2}q_1r_0^2\log\left(\frac{r_1}{r_0}\right)\\ 
+%   & \int_{T_2}^{T_1}kdT = \frac{1}{4}q_2(r_2^2 - r_1^2) - \frac{1}{2}\left[ q_2r_1^2 + q_1(r_0^2 - r_1^2) \right]\log\left(\frac{r_2}{r_1}\right)\\ 
+%   & \int_{T_f}^{T_2}kdT = \frac{1}{4}q_3\left(R^2 - r_2^2\right)
+% \end{align*}
+% We shall solve this system numerically to find the unknowns \(r_1, r_2, T_0\). Since $T_0$ is a limit of integration, we can explicit the conductivity integrals as shown in section 3.1. Finally, a new value of $r_0$ is given by the mass balance
+% \[
+%   r_0^2 = \left(\frac{\rho_1 - \rho_2}{\rho_1}\right)r_1^2 + \left(\frac{\rho_2 - \rho_3}{\rho_1}\right)r_2^2
+% \]
+% Iterate until convergence.
 
 \section{Fission gas release}
 
@@ -275,7 +322,7 @@ where $u(r,t)$ is the concentration of gas atoms in the grain. The homogeneous p
   w(r,0) = y\dot{F} \quad & r \in [0, R], t = 0 \\
   \pderiv{w}{r}(0,t) = 0 \quad & t > 0\\
   w(R, t) = 0 \quad & t > 0
-  \end{cases}
+\end{cases}
 \]
 
 apply the separation of variables $w(r,t) = \theta(t)\phi(r)$
@@ -339,9 +386,13 @@ To find the total number of atoms retained in the grain we integrate over the vo
 \subsection{Release in the plenum}
 The number of atoms released in the plenum by a single grain is given by
 \[
-  R_g(t) = p(t) - g(t) = y\dot{F}\left[ t - \frac{8yR^5}{\pi^3D}(1 - e^{-D\left( \pi/R \right)^2t})\right]
+  R_g(t) = p(t) - g(t) = y\dot{F}\left[ tV_g - \frac{8yR^5}{\pi^3D}(1 - e^{-D\left( \pi/R \right)^2t})\right]
 \]
-the number of atoms released in the plenum by all the fuel
+We notice that the fractional release
+\[
+  F(t) = \frac{R_g(t)}{p(t)} = 1 - \frac{6R^2}{\pi^4Dt}(1 - e^{-D\left( \pi/R \right)^2t}) \approx 1
+\]
+hence $R_g \approx p$. The number of atoms released in the plenum by all the fuel
 \[
   R_f(t) = R_g(t)N_g = R_g(t)\frac{V_f}{V_g}
 \]
