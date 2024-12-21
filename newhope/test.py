@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.integrate import quad
 from scipy.optimize import fsolve
+from scipy.integrate import solve_ivp
 import functions as fn
 
 # number of axial nodes
@@ -15,6 +16,10 @@ Rf = 5.42e-3/2 * np.ones(nz)
 Rci = Rf + t_gap
 Rco = 6.55e-3/2 * np.ones(nz)
 
+OM = 2 - 1.945
+y0 = 0.29
+p = 1 - 0.945
+t_irr = 365
 # axial linear power evaluation
 q_0 = 38.7e3  # W m^-1
 c = np.array([0.572, 0.737, 0.868, 0.958, 1, 0.983, 0.912, 0.802, 0.658, 0.49])
@@ -25,10 +30,18 @@ q_fit = q_0 * c
 polyn = np.poly1d(np.polyfit(z_fit, q_fit, q_fit.size-1))
 z = np.linspace(-Ha/2, +Ha/2, nz)
 def q_lin(z): return polyn(z)  # q = q(z) [W m^-1]
+# total rod power [W]
+Q = np.trapz(q_lin(z), z)
+# burnup [GWd tHM^-1]
+BU = 45
 
-r0 = 0
-chi, I = fn.radial_redstr(Rf, r0)
+Rf_avg = np.mean(Rf)
+r0 = 0.5e-3
+chi, I = fn.radial_redstr(Rf_avg, r0)
+kf = lambda T: fn.tc_fuel(T, OM, y0, p, BU)
+Omega = np.pi * (Rf_avg**2 - r0**2)
+q0 = lambda z : q_lin(z) / Omega
+def dTdr(r, T):
+    return - q0(0) / (kf(T) * r) * (I(r) - I(r0))
 
-r = np.linspace(r0, Rf, 100)
-plt.plot(r, chi(r))
-plt.show()
+
