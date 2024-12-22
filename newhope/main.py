@@ -1,26 +1,25 @@
-import numpy as np
-import nuclei_func as nu
-from scipy.optimize import fsolve
-from scipy.integrate import solve_ivp
-import matplotlib.pyplot as plt
-import functions as fn
+import numpy as np 
+import functions as fn 
 
-    
-def main(t_gap, V_plenum):
+def main(t_gap, H_plenum):
+
+    print(f"Gap thickness: {t_gap*1000} mm, Plenum height: {H_plenum} m\n\n")
+
     # fast neutron flux ( E > 100 keV ) [n cm^-2 s^-1]
     neutron_flux = 6.1e15
 
     # number of axial nodes
-    nz = 100
+    nz = 25
     # number of radial nodes in the fuel
     nr = 100
+
+    # active height [m]
     Ha = 0.85
 
     # cold geometry
     Rf = 5.42e-3/2 * np.ones(nz)
     Rci = Rf + t_gap
     Rco = 6.55e-3/2 * np.ones(nz)
-    R0 = np.zeros(nz)
 
     V_fuel = np.pi*Ha*Rf[0]**2
     TD = 11310
@@ -46,18 +45,67 @@ def main(t_gap, V_plenum):
     print(f"Burnup at {t_irr} d: {BU:.3f} GWD/tHM")
 
 
-    # 1. Thermal analysis at cold geometry
+            # 1. Thermal analysis at cold geometry
+
     Tcool, Tco, Tci, Tgap, Tfo = fn.thermal_up_to_fuel(q_lin, Rco, Rci, Rf)
     Tfuel, Rfuel = fn.thermal_in_fuel(q_lin, BU, Rf, Tfo, nr, restructured=False)
-    # fn.plot_T_colormap(Tfuel, 0, Rf[0], nr, Ha)
-    fn.plot_axial_temperatures(z, Tcool, Tco, Tci, Tgap, Tfuel)
+    # fn.plot_axial_temperatures(z, Tcool, Tco, Tci, Tgap, Tfuel)
 
     print("\nCold geometry")
     print(f"Rf: {Rf[0]*1000} mm, Rci: {Rci[0]*1000} mm, Rco: {Rco[0]} mm")
     print("Max temperatures [°C]")
     print(f"fuel: {np.max(Tfuel):.2f}, gap: {np.max(Tgap):.2f}, cladding: {np.max(Tci):.2f}, coolant: {np.max(Tcool):.2f}")
+    Tf_max = np.max(Tfuel)
+            
+            # 2. FGR and plenum dimensioning
 
-    # 2. Expansion and thermal analysis at hot geometry
+    R_grain = 1e-5 #[m]
+    V_grain = 4/3 * np.pi * R_grain**3
+    y_Fg = 0.30
+
+    # fission rate [# s^-1]
+    F_rate = fn.fission_rate(neutron_flux, rho_f)
+    print(f"\nFission rate: {F_rate:.3e}")
+
+    # fission gas production [atoms]
+    p = lambda t: y_Fg * F_rate * t * V_grain
+
+    # effective diffusion coefficient [m^2 s^-1]
+    # conservative approach: max fuel temperature at cold geometry (hottest fuel)
+    Tf_max_K = Tf_max + 273.15 #[K]
+    D = 5 * 1e-8 * np.exp(- 40262 / Tf_max_K)
+    # print(f"Deff: {D:.2e} m^2 s^-2")
+
+    # fission gas retention in the grain [atoms]
+    g = lambda t: y_Fg * F_rate * 8 * R_grain**5 / (np.pi**3 * D) * (1 - np.exp(-np.pi**2 * D * t / R_grain**2))
+
+    # release, by all the grains
+    FG_release = lambda t: ( p(t) - g(t) ) * V_fuel / V_grain
+
+    # fractional release
+    Frac_release = lambda t: ( p(t) - g(t) ) / p(t)
+    print(f"Fractional release at {t_irr} d: {Frac_release(t_irr*24*3600):.10f}")
+
+    # initial He moles
+    p_He = 101325 #[Pa]
+    T_He = 20 + 273.15 #[K]
+    V_plenum = np.pi * Rci[0]**2 * H_plenum
+    V_gas = V_plenum + np.pi * t_gap**2 * Ha
+    n_He = p_He * V_gas / (8.31446 * T_He)
+    # fission gas moles
+    NA = 6.022e23
+    n_fg = FG_release(t_irr) / NA
+    x_He = n_He / (n_He + n_fg)
+    print(f"He molar fraction: {x_He}")
+    print(f"Thermal conductivity He only: {fn.tc_gap(np.max(Tgap))}")
+    print(f"Thermal conductivity with FG: {fn.tc_gap(np.max(Tgap), x_He)}")
+
+    # plenum pressure
+    Tgap_max_K = np.max(Tgap) + 273.15
+    p_tot = (n_He + n_fg) * 8.31446 * Tgap_max_K / V_plenum
+    print(f"Plenum pressure: {p_tot/1e6:.3f} MPa")
+
+            # 3. Expansion and thermal analysis at hot geometry
 
     # fuel linear thermal expansion
     eps_th_f = lambda T: 1.2e-5 * (T - 25)
@@ -97,6 +145,7 @@ def main(t_gap, V_plenum):
     Tfuel, Rfuel = fn.thermal_in_fuel(q_lin, BU, Rf_hot, Tfo, nr, restructured=False)
 
     print(f"\nHot geometry converged in {n} iterations")
+    print("Expanded max radii [mm]")
     print(f"Rf: {np.max(Rf_hot)*1000:.2f} mm, Rci: {np.max(Rci_hot)*1000:.2f} mm, Rco: {np.max(Rco_hot)*1000:.2f} mm")
     print("Max temperatures [°C]")
     print(f"fuel: {np.max(Tfuel):.2f}, gap: {np.max(Tgap):.2f}, cladding: {np.max(Tci):.2f}, coolant: {np.max(Tcool):.2f}")
@@ -105,48 +154,19 @@ def main(t_gap, V_plenum):
     fn.plot_expanded_radii(z, Rf_hot, Rci_hot, Rco_hot, Rf, Rci, Rco)
     # plot_axial_temperatures(z, Tcool, Tco, Tci, Tgap, Tfuel)
 
-    Tf_max = np.max(Tfuel)
 
-    # 3. Restructuring
+            # 4. Restructuring
 
+    print("\nRestructuring the fuel...")
     Tfuel, Rfuel = fn.thermal_in_fuel(q_lin, BU, Rf_hot, Tfo, nr, restructured=True)
     fn.plot_Tfuel(Tfuel, Rfuel, Ha, restructured=True)
 
-    # 4. FGR and plenum dimensioning
-
-    R_grain = 1e-5 #[m]
-    V_grain = 4/3 * np.pi * R_grain**3
-    y_Fg = 0.30
-
-    # fission rate [# s^-1]
-    F_rate = fn.fission_rate(neutron_flux, rho_f)
-    print(f"\nFission rate: {F_rate}")
-
-    # fission gas production [atoms]
-    p = lambda t: y_Fg * F_rate * t * V_grain
-
-    # effective diffusion coefficient [m^2 s^-1]
-    Tf_max_K = Tf_max + 273.15 #[K]
-    D = 5 * 1e-8 * np.exp(- 40262 / Tf_max_K)
-    print(f"Deff: {D} m^2 s^-2")
-
-    # fission gas retention in the grain
-    g = lambda t: y_Fg * F_rate * 8 * R_grain**5 / (np.pi**3 * D) * (1 - np.exp(-np.pi**2 * D * t / R_grain**2))
-
-    # release
-    FG_release = lambda t: p(t) - g(t)
-
-    # fractional release
-    F_release = lambda t: FG_release(t) / p(t)
-    # t_irr = 10
-    print(f"Fractional release at {t_irr} d: {F_release(t_irr*24*3600):.10f}")
 
 
-    
-
-
-    # 5. Mechanical checks
+            # 5. Mechanical checks
 
 
 if __name__ == "__main__":
-    main(0.16e-3, 1)
+    t_gap = 0.16e-3
+    H_plenum = 0.2
+    main(t_gap, H_plenum)
