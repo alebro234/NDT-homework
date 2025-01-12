@@ -208,6 +208,7 @@ def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, BU, r0 = None, x_He = 1):
     Efuel = lambda T: (22.43e4 - 31.19 * T) * (1 - 2.6 * 0.945) # [MPa]
     nu_fuel = 0.32
 
+    p_cont = np.zeros(nz)
     for i in range(nz):
         # open gap
         if t_gap[i] > 0:
@@ -223,6 +224,7 @@ def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, BU, r0 = None, x_He = 1):
 
             h_contact = lambda T_fo: 18.11 * ( 2*tc_fuel(T_fo, 0.043, 0.29, 0.945, BU)*tc_clad(T_ci[i]) )/( tc_fuel(T_fo, 0.043, 0.29, 0.945, BU)+tc_clad(T_ci[i]) )  * p_contact(T_fo) / ( 896.3 * np.sqrt(t_gap_avg) ) 
             Res = lambda T_fo: 1 / ( 2 * np.pi * b * ( h_contact(T_fo) + tc_gap(0.5*(T_fo + T_ci[i]), x_He) / 10e-6 ) )
+            p_cont = p_contact(T_fo)
 
 
         # solve for T_fo
@@ -235,11 +237,8 @@ def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, BU, r0 = None, x_He = 1):
             if np.isnan( Res(T_fo[i]) ):
                 print(f"h_contact = {p_contact(T_fo[i]):.2f}")
 
-     
-
     T_gap = 0.5*(T_fo + T_ci)
-
-    return T_cool, T_clad, T_co, T_ci, T_gap, T_fo, np.max(u), p_contact(T_fo)
+    return T_cool, T_clad, T_co, T_ci, T_gap, T_fo, np.max(u), p_cont
 
 def thermal_in_fuel(q_lin, BU, Rf, T_fo, nr, r0=None, r1=None, r2=None, log=True):
     # thermal analysis in the fuel

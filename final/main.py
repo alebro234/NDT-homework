@@ -169,6 +169,7 @@ def main(t_gap, H_plenum):
         print(f"He molar fraction: {x_He}")
 
         # expand
+        print("\nExpanding...")
         toll = 0.3e-4
         err = toll+1
         max_iter = 100
@@ -189,6 +190,7 @@ def main(t_gap, H_plenum):
 
             # thermal analysis at new geometry
             Tcool, T_clad, Tco, Tci, Tgap, Tfo, u_max, p_contact = fn.thermal_up_to_fuel(q_lin, Rco_new, Rci_new, Rf_new, BU, x_He=x_He)
+                
 
             for i in range(nz):
                 if Rf_new[i] >= Rci_new[i]:
@@ -219,10 +221,10 @@ def main(t_gap, H_plenum):
                 Rf_new[i] = Rci_new[i]
 
         # write p_contact vector to csv file, append row for each time step
-        file_name = 'p_contact.csv'
-        with open(file_name, mode='a') as file:
-            writer = csv.writer(file)
-            writer.writerow(p_contact)
+        # file_name = 'p_contact.csv'
+        # with open(file_name, mode='a') as file:
+        #     writer = csv.writer(file)
+        #     writer.writerow(p_contact)
 
 
         Tfuel, Rfuel = fn.thermal_in_fuel(q_lin, BU, Rf_new, Tfo, nr, r0, r1, r2)
@@ -234,6 +236,7 @@ def main(t_gap, H_plenum):
         print(f"Rf: {np.max(Rf_hot)*1000:.2f} mm, Rci: {np.max(Rci_hot)*1000:.2f} mm, Rco: {np.max(Rco_hot)*1000:.2f} mm")
         print("Max temperatures [°C]")
         print(f"fuel: {np.max(Tfuel):.2f}, gap: {np.max(Tgap):.2f}, cladding: {np.max(Tci):.2f}, coolant: {np.max(Tcool):.2f}")
+        print(f"Max contact pressure: {np.max(p_contact):.3f} MPa")
         # plenum dimensioning
         Tgap_max_K = np.max(Tgap) + 273.15 
         p_tot = (n_He + n_fg) * 8.31446 * Tgap_max_K / V_gas
@@ -324,6 +327,6 @@ def main(t_gap, H_plenum):
 
 
 if __name__ == "__main__":
-    t_gap = 40e-6
+    t_gap = 20e-6
     H_plenum = 1.3
     main(t_gap, H_plenum)
