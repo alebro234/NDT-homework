@@ -199,8 +199,8 @@ def main(t_gap, H_plenum):
                     if i not in i_closed:
                         i_closed.append(i)
 
-            if len(i_closed) >  0.85 * nz:
-                break
+            # if len(i_closed) >  0.85 * nz:
+            #     break
 
             err = np.max([
                 np.abs(np.mean(Rf_new) - np.mean(Rf_prev)),

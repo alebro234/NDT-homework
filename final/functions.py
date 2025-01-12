@@ -232,10 +232,10 @@ def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, BU, r0 = None, x_He = 1):
             return T_fo - T_ci[i] - q_lin(z[i]) * Res(T_fo)
         T_fo[i] = fsolve(fun_gap, T_ci[i])
 
-        if t_gap[i] < 0:
-            # print(f"Closed gap: Res = {Res(T_fo[i]):.5f}, pc = {p_contact(T_fo[i]):.2f} MPa")
-            if np.isnan( Res(T_fo[i]) ):
-                print(f"h_contact = {p_contact(T_fo[i]):.2f}")
+        # if t_gap[i] < 0:
+        #     # print(f"Closed gap: Res = {Res(T_fo[i]):.5f}, pc = {p_contact(T_fo[i]):.2f} MPa")
+        #     if np.isnan( Res(T_fo[i]) ):
+        #         print(f"h_contact = {p_contact(T_fo[i]):.2f}")
 
     T_gap = 0.5*(T_fo + T_ci)
     return T_cool, T_clad, T_co, T_ci, T_gap, T_fo, np.max(u), p_cont
