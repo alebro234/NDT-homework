@@ -140,7 +140,7 @@ def radial_redstr(R, r0):
     return chi, I
 
 
-def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, r0 = None, x_He = 1):
+def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, BU, r0 = None, x_He = 1):
     # thermal analysis up to fuel outer radius
     # q_lin(z): linear power density [W m^-1]
     # Rco: cladding outer radius [m]
@@ -212,20 +212,16 @@ def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, r0 = None, x_He = 1):
         # open gap
         if t_gap[i] > 0:
             Res = lambda T_fo: t_gap[i] / (2 * np.pi *Rf[i] * tc_gap(0.5*(T_fo + T_ci[i]), x_He))
-            # print(f"APERTO Res = {Res(T_fo[i]):.5f}")
+            p_contact = lambda T_fo: [0]*nz
         # closed gap
         else:
-            # Res = lambda T_fo: np.abs(t_gap[i]) / (2 * np.pi *Rci[i] * tc_gap(0.5*(T_fo + T_ci[i]), x_He))
-            # # r_middle = 0.5 * ( Rf[i] + Rci[i] )
-            # Rf[i] = Rci[i]
-            # # Rci[i] = r_middle
             a = r0[i]
             b = Rci[i]
             c = Rco[i]
             p_contact = lambda T_fo: ( -t_gap[i]/b ) /( ( (b**2+c**2)/(c**2-b**2) - 1/nu_clad(T_ci[i]) )/E_clad(T_ci[i]) + (
                 (a**2+b**2)/(b**2-a**2) - 1/nu_fuel )/Efuel(T_fo) ) # [MPa]
 
-            h_contact = lambda T_fo: 18.11 * ( 2*tc_fuel(T_fo, 0.043, 0.29, 0.945, 45.57)*tc_clad(T_ci[i]) )/( tc_fuel(T_fo, 0.043, 0.29, 0.945, 45.57)+tc_clad(T_ci[i]) )  * p_contact(T_fo) / ( 896.3 * np.sqrt(t_gap_avg) ) 
+            h_contact = lambda T_fo: 18.11 * ( 2*tc_fuel(T_fo, 0.043, 0.29, 0.945, BU)*tc_clad(T_ci[i]) )/( tc_fuel(T_fo, 0.043, 0.29, 0.945, BU)+tc_clad(T_ci[i]) )  * p_contact(T_fo) / ( 896.3 * np.sqrt(t_gap_avg) ) 
             Res = lambda T_fo: 1 / ( 2 * np.pi * b * ( h_contact(T_fo) + tc_gap(0.5*(T_fo + T_ci[i]), x_He) / 10e-6 ) )
 
 
@@ -234,16 +230,16 @@ def thermal_up_to_fuel(q_lin, Rco, Rci, Rf, r0 = None, x_He = 1):
             return T_fo - T_ci[i] - q_lin(z[i]) * Res(T_fo)
         T_fo[i] = fsolve(fun_gap, T_ci[i])
 
-        # if t_gap[i] < 0:
-        #     print(f"Closed gap: Res = {Res(T_fo[i]):.5f}, pc = {p_contact(T_fo[i]):.2f} MPa")
+        if t_gap[i] < 0:
+            # print(f"Closed gap: Res = {Res(T_fo[i]):.5f}, pc = {p_contact(T_fo[i]):.2f} MPa")
+            if np.isnan( Res(T_fo[i]) ):
+                print(f"h_contact = {p_contact(T_fo[i]):.2f}")
 
-    # t_gap = Rci - Rf
-    # def fun_gap(T_fo):
-    #     return T_fo - T_ci - q_lin(z) * t_gap / (2 * np.pi *Rf * tc_gap(0.5*(T_fo + T_ci), x_He))
+     
 
     T_gap = 0.5*(T_fo + T_ci)
 
-    return T_cool, T_clad, T_co, T_ci, T_gap, T_fo, np.max(u)
+    return T_cool, T_clad, T_co, T_ci, T_gap, T_fo, np.max(u), p_contact(T_fo)
 
 def thermal_in_fuel(q_lin, BU, Rf, T_fo, nr, r0=None, r1=None, r2=None, log=True):
     # thermal analysis in the fuel
@@ -461,8 +457,7 @@ def plot_radial_T(T, z, r0, R, n_r, Ha):
     plt.grid()
 
 def plot_Tfuel(Tfuel, Rfuel, Ha, restructured=False):
-    
-    
+
     # Create meshgrid for plotting
     z = np.linspace(-Ha/2, Ha/2, Tfuel.shape[0])
     r0_avg = np.mean(Rfuel[:,0])
@@ -479,8 +474,8 @@ def plot_Tfuel(Tfuel, Rfuel, Ha, restructured=False):
     
     if restructured:
         # Add contours for T=1800K and T=1600K
-        CS1 = plt.contour(R*1000, Z*1000, Tfuel, levels=[1800], colors='white', linestyles='solid', linewidths=2)
-        CS2 = plt.contour(R*1000, Z*1000, Tfuel, levels=[1600], colors='white', linestyles='solid', linewidths=2)
+        CS1 = plt.contour(R*1000, Z*1000, Tfuel, levels=[1800], colors='black', linestyles='solid', linewidths=2)
+        CS2 = plt.contour(R*1000, Z*1000, Tfuel, levels=[1600], colors='black', linestyles='solid', linewidths=2)
     
         # Add contour labels
         plt.clabel(CS1, inline=True, fmt='%1.0f°C')
@@ -506,9 +501,6 @@ def plot_T_colormap(T, r0, R, n_r, Ha):
     plt.xlabel('r [mm]')
     plt.ylabel('z [mm]')
     plt.grid()
-    plt.show()
-
-
 
 
 def plot_expanded_radii(z, r0_hot, Rf_hot, Rci_hot, r0_cold, Rf_cold, Rci_cold):
@@ -563,8 +555,8 @@ def plot_restructuring_radii(z, r0, r1, r2, Rf):
     plt.plot(r1 * 1000, z, label='r1 (mm)')
     plt.plot(r2 * 1000, z, label='r2 (mm)')
     plt.plot(Rf * 1000, z, label='Rf (mm)')
-    plt.ylabel('Axial Position z (m)')
-    plt.xlabel('Radii (mm)')
+    plt.ylabel('z (m)')
+    plt.xlabel('r (mm)')
     plt.title('Restructuring Radii Along Axial Position')
     plt.legend()
     plt.grid(True)
