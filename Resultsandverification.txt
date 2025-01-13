@@ -1,0 +1,54 @@
+
+
+Cold geometry
+Rf: 2.71 mm, Rci: 2.75 mm, Rco: 3.28 mm
+Max temperatures [°C]
+fuel: 2199.50, gap: 719.22, cladding: 635.14, coolant: 606.47
+
+
+                 Irradiation time: 7 days, Burnup: 0.876 GWD/tHM
+
+
+
+Hot geometry converged in 2 iterations
+Max coolant velocity: 4.876 m/s
+Expanded max radii [mm]
+Rf: 2.74 mm, Rci: 2.78 mm, Rco: 3.31 mm
+Max temperatures [°C]
+
+Restructuring the fuel...
+Restructured fuel: r0 = 2.850e-04, r1 = 1.374e-03, r2 = 1.671e-03, T0 = 2107.52 °C
+
+Initial He moles: 1.291e-03
+
+
+                 Irradiation time: 365 days, Burnup: 45.666 GWD/tHM
+
+
+
+Fission rate: 4.179e+19
+Released FG moles: 1.287e-02
+He molar fraction: 0.09114123573082564
+
+Expanding...
+Allowable stress: 126.17688474280627 MPa
+Max equivalent mechanical stress Lame: 104.87355683977965 MPa
+Max equivalent mechanical stress Mariotte: 89.24325711949172 MPa
+Max equivalent thermal stress: 101.32685617354228 MPa
+
+Hot geometry converged in 101 iterations
+Max coolant velocity: 4.877 m/s
+Expanded max radii [mm]
+Rf: 2.82 mm, Rci: 2.82 mm, Rco: 3.35 mm
+Max temperatures [°C]
+fuel: 2615.77, gap: 966.63, cladding: 634.80, coolant: 606.47
+Max contact pressure: 11.746 MPa
+Plenum pressure: 4.640 MPa
+
+Limits check
+Max fuel temperature: 2615.77 °C < 2600 °C
+Max cladding temperature: 634.80 °C < 650 °C
+Plenum pressure: 4.640 MPa < 5 MPa
+Max coolant velocity: 4.877 m/s < 8 m/s
+Max cladding volumetric swelling: 5.10% < 3%
+Minimum time to rupture: 1438068.001 h, i.e 164.163 years
