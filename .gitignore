@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+
+# LaTeX build files (the .tex and .pdf are tracked)
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc

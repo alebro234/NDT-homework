@@ -233,7 +233,7 @@ def main(t_gap, H_plenum):
         print(f"\nHot geometry converged in {n} iterations")
         print(f"Max coolant velocity: {u_max:.3f} m/s")
         print("Expanded max radii [mm]")
-        print(f"Rf: {np.max(Rf_new)*1000:.2f} mm, Rci: {np.max(Rci_new)*1000:.2f} mm, Rco: {np.max(Rco_new)*1000:.2f} mm")
+        print(f"Rf: {np.max(Rf_new)*1000:.4f} mm, Rci: {np.max(Rci_new)*1000:.4f} mm, Rco: {np.max(Rco_new)*1000:.4f} mm")
         print("Max temperatures [°C]")
         print(f"fuel: {np.max(Tfuel):.2f}, gap: {np.max(Tgap):.2f}, cladding: {np.max(Tci):.2f}, coolant: {np.max(Tcool):.2f}")
         print(f"Max contact pressure: {np.max(p_contact):.3f} MPa")
